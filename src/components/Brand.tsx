@@ -1,17 +1,23 @@
+import { useId } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '../lib/utils'
 
 export function BrandMark({ className }: { className?: string }) {
+  const raw = useId()
+  const gid = `nsz-${raw.replace(/[^a-zA-Z0-9]/g, '')}`
+  const left = 'M24 12.8C22.3 10.4 19.8 10 16.3 10 11.2 10 7 13.9 7 19.4c0 6.2 6.6 11.8 17 19.1Z'
+  const right = 'M24 12.8C25.7 10.4 28.2 10 31.7 10 36.8 10 41 13.9 41 19.4c0 6.2-6.6 11.8-17 19.1Z'
   return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className={cn('h-8 w-8', className)}>
-      <rect width="48" height="48" rx="11" fill="#2F6B4F" />
-      <path
-        d="M24 12c-7.2 0-13 5.1-13 11.4 0 3.4 1.8 6.4 4.7 8.3-.2 1.6-.9 3.4-2.1 4.7-.2.2 0 .6.3.5 2-.5 3.7-1.4 5-2.5 1.7.5 3.4.7 5.1.7 7.2 0 13-5.1 13-11.4S31.2 12 24 12Z"
-        fill="#fff"
-      />
-      <circle cx="18.5" cy="23.5" r="1.7" fill="#2F6B4F" />
-      <circle cx="24" cy="23.5" r="1.7" fill="#2F6B4F" />
-      <circle cx="29.5" cy="23.5" r="1.7" fill="#2F6B4F" />
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className={cn('h-9 w-9', className)}>
+      <defs>
+        <linearGradient id={gid} x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#3E8F66" />
+          <stop offset="1" stopColor="#214B38" />
+        </linearGradient>
+      </defs>
+      <rect width="48" height="48" rx="12" fill={`url(#${gid})`} />
+      <path fill="#DCEFE3" d={left} />
+      <path fill="#FFFFFF" d={right} />
     </svg>
   )
 }

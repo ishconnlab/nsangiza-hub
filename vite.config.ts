@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => {
       seoPlugin(siteUrl),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'offline.html', 'robots.txt'],
+        includeAssets: ['favicon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-192-maskable.png', 'icons/icon-512-maskable.png', 'offline.html', 'robots.txt'],
         manifest: {
           name: 'Nsangiza Hub | Your Safe Space to Talk',
           short_name: 'Nsangiza',
@@ -102,13 +102,14 @@ export default defineConfig(({ mode }) => {
           start_url: '/',
           scope: '/',
           display: 'standalone',
-          background_color: '#ffffff',
-          theme_color: '#0f766e',
+          background_color: '#F8FAF8',
+          theme_color: '#2F6B4F',
           categories: ['health', 'wellness', 'lifestyle'],
           icons: [
             { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
             { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-            { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: '/icons/icon-192-maskable.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: '/icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
             { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           ],
           shortcuts: [
