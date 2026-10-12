@@ -274,8 +274,8 @@ the two dev servers work together without CORS configuration.
 
 | Variable | Example | Purpose |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | `https://nsangiza-api.onrender.com/api/v1` | API base URL. Empty in dev to use the Vite proxy. |
-| `VITE_SITE_URL` | `https://nsangiza.vercel.app` | Public origin for canonical URLs, OG tags and `sitemap.xml`. |
+| `VITE_API_BASE_URL` | `https://nsangiza-hub.onrender.com/api/v1` | API base. Production builds default to the Render API. |
+| `VITE_SITE_URL` | `https://nsangizahub.vercel.app` | Public origin for canonical URLs, OG tags and `sitemap.xml`. |
 
 ### Backend (`server/.env`)
 | Variable | Example | Notes |
@@ -287,7 +287,7 @@ the two dev servers work together without CORS configuration.
 | `JWT_REFRESH_SECRET` | *(random, ≥ 32 chars)* | **Required in production.** |
 | `JWT_ACCESS_EXPIRES_IN` | `15m` | Access-token lifetime. |
 | `JWT_REFRESH_EXPIRES_IN` | `30d` | Refresh-token lifetime. |
-| `CLIENT_ORIGIN` | `https://nsangiza.vercel.app` | Comma-separated CORS allowlist. |
+| `CLIENT_ORIGIN` | `https://nsangizahub.vercel.app` | Comma-separated CORS allowlist. |
 | `COOKIE_SAME_SITE` | `none` | `none` for cross-site (Vercel↔Render); `lax` for local. |
 | `COOKIE_SECURE` | `true` | `true` whenever `COOKIE_SAME_SITE=none`. |
 | `COOKIE_DOMAIN` | *(optional)* | e.g. `.your-domain.com` to share the cookie across subdomains. |
@@ -334,18 +334,19 @@ Three pieces: **MongoDB Atlas** (database) → **Render** (API) → **Vercel**
   - `NODE_ENV=production`
   - `MONGODB_URI=<Atlas string with /nsangiza_hub>`
   - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (long random strings)
-  - `CLIENT_ORIGIN=https://<your-vercel-domain>` (add custom domains too, comma-separated)
+  - `CLIENT_ORIGIN=https://nsangizahub.vercel.app` (add custom domains too, comma-separated)
   - `COOKIE_SAME_SITE=none`, `COOKIE_SECURE=true`
-- Note the Render URL, e.g. `https://nsangiza-hub-api.onrender.com`.
+- The live API is `https://nsangiza-hub.onrender.com` (health: `/health`).
 
 ### 11.3 Vercel (frontend)
 - Import this repository. Vercel auto-detects Vite; `vercel.json` sets the build,
   the SPA rewrite and cache headers.
-- Set environment variables:
-  - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api/v1`
-  - `VITE_SITE_URL=https://<your-vercel-domain>`
-- Deploy. Then update Render's `CLIENT_ORIGIN` to the final Vercel domain and
-  redeploy the API.
+- Set environment variables (optional — production builds default to them):
+  - `VITE_API_BASE_URL=https://nsangiza-hub.onrender.com/api/v1`
+  - `VITE_SITE_URL=https://nsangizahub.vercel.app`
+- Deploy. The live frontend is `https://nsangizahub.vercel.app`.
+- Ensure Render's `CLIENT_ORIGIN` includes the Vercel domain (built into the
+  server as a trusted origin, so browser logins work out of the box).
 
 ---
 

@@ -27,7 +27,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 30d
       - key: CLIENT_ORIGIN
-        sync: false
+        value: https://nsangizahub.vercel.app
       - key: COOKIE_SAME_SITE
         value: none
       - key: COOKIE_SECURE

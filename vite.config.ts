@@ -86,7 +86,7 @@ function seoPlugin(siteUrl: string): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const siteUrl = env.VITE_SITE_URL ?? 'http://localhost:5173'
+  const siteUrl = env.VITE_SITE_URL ?? 'https://nsangizahub.vercel.app'
 
   return {
     plugins: [

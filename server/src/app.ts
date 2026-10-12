@@ -27,17 +27,20 @@ const app = express()
 
 app.set('trust proxy', 1)
 
-const allowedOrigins = env.clientOrigin
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean)
+// Always-trusted production frontend origins, in addition to CLIENT_ORIGIN.
+const PRODUCTION_ORIGINS = ['https://nsangizahub.vercel.app']
+const allowedOrigins = new Set(
+  [...env.clientOrigin.split(','), ...PRODUCTION_ORIGINS]
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+)
 
 app.use(securityHeaders)
 app.use(
   cors({
     origin(origin, callback) {
       // Allow same-origin / server-to-server requests (no Origin header).
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+      if (!origin || allowedOrigins.has(origin)) return callback(null, true)
       // Unknown origins get no CORS headers rather than a hard error.
       return callback(null, false)
     },
