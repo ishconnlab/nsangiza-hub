@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /onboarding
+Disallow: /professional
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://nsangiza.rw/sitemap.xml
