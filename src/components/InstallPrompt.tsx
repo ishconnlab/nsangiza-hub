@@ -70,8 +70,8 @@ export function InstallPrompt() {
     window.addEventListener('appinstalled', onInstalled)
 
     const timer = window.setTimeout(() => {
-      if (installable.current && !isStandalone()) setVisible(true)
-    }, 4000)
+      if (!isStandalone()) setVisible(true)
+    }, 1000)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall)
