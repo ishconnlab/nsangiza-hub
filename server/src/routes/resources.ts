@@ -19,7 +19,7 @@ router.get(
     }
     if (category) filter.category = category
     if (language) filter.language = language
-    if (featured === 'true') filter.featuredImage = { $ne: '' }
+    if (featured === 'true') filter.reviewStatus = 'Reviewed'
 
     const pageNum = Math.max(1, Number(page) || 1)
     const size = Math.min(50, Math.max(1, Number(pageSize) || 12))

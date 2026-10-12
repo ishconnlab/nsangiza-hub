@@ -15,7 +15,7 @@ const resourceSchema = new Schema(
     reviewStatus: { type: String, enum: REVIEW_STATUS, default: 'Draft' },
     published: { type: Boolean, default: false },
     publishedAt: { type: Date, default: null },
-    featuredImage: { type: String, default: '/og-default.png' },
+    featuredImage: { type: String, default: '' },
     tags: { type: [String], default: [] },
     relatedSlugs: { type: [String], default: [] },
   },

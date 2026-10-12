@@ -15,6 +15,7 @@ import { SafetyNotice } from '../../components/SafetyNotice'
 import { formatDate, formatPrice, initials } from '../../lib/format'
 import { ApiError } from '../../lib/api'
 import { useAuth } from '../../hooks/auth-context'
+import { dashboardPathFor } from '../../router/guards'
 import { useStartConversation } from '../../services/conversations'
 import { useCreateAppointment } from '../../services/appointments'
 import { useProfessionalDetail } from '../../services/professionals'
@@ -22,7 +23,7 @@ import { useProfessionalDetail } from '../../services/professionals'
 export default function ProfessionalDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { data, isLoading, isError } = useProfessionalDetail(id ?? '')
   const createMutation = useCreateAppointment()
   const startConversation = useStartConversation()
@@ -88,7 +89,7 @@ export default function ProfessionalDetail() {
       })
       toast.success('Appointment requested.')
       setBookingOpen(false)
-      navigate('/app/appointments')
+      navigate(user?.role === 'USER' ? '/app/appointments' : dashboardPathFor(user?.role))
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Booking failed.')
     } finally {

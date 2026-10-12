@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { del, get, patch, post } from '../lib/api'
-import type { AdminDashboard, AdminProfessionalRow, AdminUserRow, Resource, SafeguardingCase } from '../types'
+import type { AdminDashboard, AdminProfessionalRow, AdminUserRow, Professional, Resource, SafeguardingCase } from '../types'
 
 export const adminKeys = {
   dashboard: ['admin', 'dashboard'] as const,
@@ -64,6 +64,14 @@ export function usePendingProfessionals() {
         '/admin/professionals/pending',
       ),
     staleTime: 30_000,
+  })
+}
+
+export function useAdminProfessional(id?: string) {
+  return useQuery({
+    queryKey: [...adminKeys.professionals, 'detail', id],
+    queryFn: () => get<{ professional: Professional; account: { id: string; email: string; displayName: string } | null }>(`/admin/professionals/${id}`),
+    enabled: Boolean(id),
   })
 }
 

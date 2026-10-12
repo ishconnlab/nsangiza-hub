@@ -64,6 +64,11 @@ export function RoleRoute({ roles }: { roles: Role[] }) {
   return <Outlet />
 }
 
+export function DashboardRedirect() {
+  const { user } = useAuth()
+  return <Navigate to={dashboardPathFor(user?.role)} replace />
+}
+
 export function GuestRoute() {
   const { isAuthenticated, isLoading, onboardingComplete, user } = useAuth()
 

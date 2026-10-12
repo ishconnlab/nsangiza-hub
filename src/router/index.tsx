@@ -1,9 +1,9 @@
 import { lazy } from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 
 import PublicLayout from '../layouts/PublicLayout'
 import AppLayout from '../layouts/AppLayout'
-import { GuestRoute, LandingRoute, OnboardingRoute, ProtectedRoute, RequireOnboardingRoute, RoleRoute } from './guards'
+import { DashboardRedirect, GuestRoute, LandingRoute, OnboardingRoute, ProtectedRoute, RequireOnboardingRoute, RoleRoute } from './guards'
 
 import Home from '../pages/public/Home'
 
@@ -102,7 +102,10 @@ export const router = createBrowserRouter([
                   { path: '/app/resources', element: <UserResources /> },
                   { path: '/app/notifications', element: <Notifications /> },
                   { path: '/app/profile', element: <ProfileSettings /> },
-                  { path: '*', element: <NotFound /> },
+                  { path: '/appointments', element: <Navigate to="/app/appointments" replace /> },
+                  { path: '/app/sessions', element: <Navigate to="/app/appointments" replace /> },
+                  { path: '/dashboard', element: <DashboardRedirect /> },
+                  { path: '*', element: <DashboardRedirect /> },
                 ],
               },
             ],
@@ -123,7 +126,9 @@ export const router = createBrowserRouter([
                   { path: '/professional/messages/:conversationId', element: <Messages /> },
                   { path: '/professional/follow-ups', element: <ProFollowUps /> },
                   { path: '/professional/notifications', element: <Notifications /> },
-                  { path: '*', element: <NotFound /> },
+                  { path: '/clients', element: <Navigate to="/professional/clients" replace /> },
+                  { path: '/professional/sessions', element: <Navigate to="/professional/appointments" replace /> },
+                  { path: '*', element: <DashboardRedirect /> },
                 ],
               },
             ],
@@ -151,7 +156,7 @@ export const router = createBrowserRouter([
                   { path: '/admin/audit-logs', element: <AdminAuditLogs /> },
                 ],
               },
-              { path: '/admin/*', element: <NotFound /> },
+              { path: '/admin/*', element: <DashboardRedirect /> },
             ],
           },
         ],

@@ -14,8 +14,8 @@ import { useProfessionalClient } from '../../services/professional'
 import { useCompleteFollowUp } from '../../services/followups'
 
 export default function ProClientDetail() {
-  const { clientId } = useParams<{ clientId: string }>()
-  const { data, isLoading, isError } = useProfessionalClient(clientId ?? '')
+  const { id } = useParams<{ id: string }>()
+  const { data, isLoading, isError } = useProfessionalClient(id ?? '')
   const complete = useCompleteFollowUp()
 
   const [notes, setNotes] = useState('')

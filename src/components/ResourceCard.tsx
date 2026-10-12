@@ -3,11 +3,11 @@ import { Clock3, Tag } from 'lucide-react'
 import { Badge } from './ui/badge'
 import { Card, CardContent } from './ui/card'
 import { formatDate } from '../lib/format'
-import { coverPhoto } from '../lib/images'
+import { resourcePhoto } from '../lib/images'
 import type { Resource } from '../types'
 
 export function ResourceCard({ resource }: { resource: Resource }) {
-  const image = resource.featuredImage ?? coverPhoto(resource.slug || resource.id)
+  const image = resourcePhoto(resource)
 
   return (
     <Card className="group overflow-hidden transition-shadow hover:shadow-lg">

@@ -6,6 +6,7 @@ import { Loading, EmptyState } from '../../components/PageHeader'
 import { ResourceCard } from '../../components/ResourceCard'
 import { SafetyNotice } from '../../components/SafetyNotice'
 import { formatDate } from '../../lib/format'
+import { resourcePhoto } from '../../lib/images'
 import { useResourceDetail } from '../../services/resources'
 
 export default function ResourceDetail() {
@@ -43,9 +44,9 @@ export default function ResourceDetail() {
         <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-hub-text">{resource.title}</h1>
         <p className="mt-3 text-hub-muted">{resource.summary}</p>
 
-        {resource.featuredImage && (
+        {resource.featuredImage !== 'hidden' && (
           <img
-            src={resource.featuredImage}
+            src={resourcePhoto(resource)}
             alt=""
             className="mt-6 h-56 w-full rounded-2xl object-cover"
             loading="lazy"

@@ -183,7 +183,7 @@ export async function seed(options: { reset?: boolean } = {}): Promise<void> {
       reviewStatus: 'Reviewed',
       published: true,
       publishedAt: daysFromNow(-(index * 3 + 2), 8),
-      featuredImage: '/og-default.png',
+      featuredImage: '',
     })),
   )
 

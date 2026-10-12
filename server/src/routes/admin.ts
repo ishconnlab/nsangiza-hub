@@ -184,6 +184,23 @@ router.get(
   }),
 )
 
+router.get(
+  '/professionals/:id',
+  asyncHandler(async (req: AReq, res) => {
+    const professional = await Professional.findById(req.params.id).lean()
+    if (!professional) throw ApiError.notFound('Professional not found.')
+    const account = professional.user
+      ? await User.findById(professional.user).select('email displayName role active createdAt lastLoginAt').lean()
+      : null
+    res.json(
+      ok({
+        professional: { ...professional, id: String(professional._id) },
+        account: account ? { ...account, id: String(account._id) } : null,
+      }),
+    )
+  }),
+)
+
 const verificationSchema = z.object({
   status: z.enum(['Approved', 'Rejected', 'Under Review', 'Suspended', 'Request Changes']),
   reviewNote: z.string().optional(),
