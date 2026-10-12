@@ -131,11 +131,24 @@ router.post(
       status: 'sent',
     })
 
-    conversation.lastMessageAt = new Date()
-    conversation.lastMessagePreview = (body.body ?? `[${body.kind}]`).slice(0, 120)
     const otherId = conversation.participants.find((p) => String(p) !== req.userId)
+
+    // Use atomic operators: mutating the `unread` Map on a hydrated document
+    // throws "Mongoose maps do not support keys that start with '$'".
+    await Conversation.updateOne(
+      { _id: conversation._id },
+      {
+        $set: {
+          lastMessageAt: new Date(),
+          lastMessagePreview: (body.body ?? `[${body.kind}]`).slice(0, 120),
+        },
+      },
+    )
     if (otherId) {
-      conversation.unread.set(String(otherId), (conversation.unread.get(String(otherId)) ?? 0) + 1)
+      await Conversation.updateOne(
+        { _id: conversation._id },
+        { $inc: { [`unread.${String(otherId)}`]: 1 } },
+      )
       await Notification.create({
         user: otherId,
         type: 'message',
@@ -146,7 +159,6 @@ router.post(
         link: user?.role === 'USER' ? '/professional/messages' : '/app/messages',
       })
     }
-    await conversation.save()
     res.status(201).json(ok({ message }, 'Message sent.'))
   }),
 )
@@ -155,8 +167,10 @@ router.patch(
   '/:id/read',
   asyncHandler(async (req: AuthedRequest, res) => {
     const conversation = await accessibleConversation(req.params.id, req.userId!)
-    conversation.unread.set(String(req.userId), 0)
-    await conversation.save()
+    await Conversation.updateOne(
+      { _id: conversation._id },
+      { $set: { [`unread.${String(req.userId)}`]: 0 } },
+    )
     await Message.updateMany({ conversation: conversation._id, sender: { $ne: req.userId }, status: { $in: ['sent', 'delivered'] } }, { status: 'read' })
     res.json(ok({}, 'Conversation marked as read.'))
   }),

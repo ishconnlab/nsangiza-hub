@@ -1,8 +1,13 @@
-# Nsangiza Hub â€” Your Safe Space to Talk
+# Nsangiza Hub — Your Safe Space to Talk
 
-A private, digital psychological and mental-health support platform for Rwanda. Nsangiza Hub connects people to verified professionals for secure chat, audio and video sessions; lets users check in with their mood daily; provides moderated peer-community spaces; and gives professionals and administrators the tools to run care safely â€” all as an installable (PWA) app designed to feel native on small phones.
+A private, digital psychological and mental-health support platform for Rwanda.
+Nsangiza Hub connects people to verified professionals for secure chat, audio and
+video sessions; lets users check in with their mood daily; provides moderated
+peer-community spaces; and gives professionals and administrators the tools to
+run care safely — all as an installable (PWA) app designed to feel native on
+small phones.
 
-> **Brand note:** the product name is always **"Nsangiza Hub"** â€” never renamed.
+> **Brand note:** the product name is always **"Nsangiza Hub"** — never renamed.
 
 ---
 
@@ -12,311 +17,367 @@ Four audiences use one connected system:
 
 | Audience | Role | What they can do |
 | --- | --- | --- |
-| **Users** | `USER` | Onboard (consent â†’ preferences â†’ quick assessment), book & join appointments, take daily mood check-ins, message professionals securely, join community groups, follow newsfeed/notifications |
+| **Users** | `USER` | Onboard (consent → preferences → quick assessment), book & join appointments, take daily mood check-ins, message professionals securely, join community groups, follow the newsfeed/notifications |
 | **Professionals** | `PROFESSIONAL` | Build a public profile, upload licence/degree documents, set weekly availability, submit for verification, confirm/complete/cancel sessions, manage follow-ups, message clients |
 | **Moderators / supervisors** | `PROFESSIONAL` (staff) | Review the verification queue, moderate community content, run safeguarding case work |
 | **Administrators** | `ADMIN` | Full control: users, professionals & verification, resources, community reports, safeguarding, audit logs and analytics |
 
-The product philosophy is **safe, private, and human-first**:
+Product philosophy: **safe, private, human-first**.
 
-- Trust by verification â€” every listed professional is someone whose documents have been reviewed (documents are uploaded, stored on disk and opened by admins during review).
-- Least-privilege data access â€” professionals see only aggregated summaries of clients (no raw clinical notes by default); check-ins are private to the user and their care team.
-- Crisis safety built in â€” emergency help numbers (Rwanda National Police 112, Ambulance 912) are surfaced in the footer, public pages, and relevant flows.
-- Community is moderated â€” group rules, report/dismiss moderation and hide/restore for harmful posts.
+- **Trust by verification** — every listed professional has had documents reviewed by an admin.
+- **Least-privilege data access** — professionals see aggregated summaries by default; check-ins are private to the user and their care team.
+- **Crisis safety built in** — emergency numbers (Rwanda National Police 112, Ambulance 912) are surfaced in the footer, public pages and relevant flows.
+- **Community is moderated** — group rules, report/dismiss moderation and hide/restore for harmful posts.
 
 ---
 
 ## 2. Architecture
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  Frontend  (single-page app, installable PWA)               â”‚
-â”‚  React 19 + Vite 8 + TypeScript + Tailwind CSS              â”‚
-â”‚  React Router 7 Â· TanStack Query 5 Â· Radix UI Â· sonner      â”‚
-â”‚  Role-based router guards â†’  / , /app, /professional, /adminâ”‚
-â”‚  Native-style mobile shell: bottom taskbar + bottom sheet   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                           â”‚  /api  and  /uploads   (Vite proxy in dev)
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  API  (Express 4 + Mongoose 8 + Zod 4)   http://localhost:4000â”‚
-â”‚  JWT access token (Bearer) + refresh cookie Â· bcryptjs       â”‚
-â”‚  Routes mounted under /api/v1  â†’  auth, users, professionals,â”‚
-â”‚  matching, appointments, conversations, resources, community,â”‚
-â”‚  notifications, follow-ups, emergency, admin, per-professionalâ”‚
-â”‚  Static file serving for uploaded documents at /uploads      â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                           â”‚
-              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-              â”‚  MongoDB                â”‚
-              â”‚  (nsangiza_hub, local)  â”‚
-              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌────────────────────────────────────────────────────────────┐
+│  Frontend (SPA, installable PWA)   → Vercel (static)        │
+│  React 19 · Vite 8 · TypeScript · Tailwind CSS              │
+│  React Router 7 · TanStack Query 5 · Radix UI · sonner      │
+│  Role-based guards → /  /app  /professional  /admin         │
+└───────────────────────────┬────────────────────────────────┘
+                            │  HTTPS  (VITE_API_BASE_URL)
+┌───────────────────────────▼────────────────────────────────┐
+│  API (Express 4 + Mongoose 8 + Zod 4)  → Render (web)       │
+│  JWT access token (Bearer) + httpOnly refresh cookie        │
+│  Routes under /api/v1  ·  health at /health                 │
+└───────────────────────────┬────────────────────────────────┘
+                            │
+                    ┌───────▼────────┐
+                    │  MongoDB Atlas │
+                    └────────────────┘
 ```
 
-- Frontend dev server: `http://localhost:5173`
-- API dev server: `http://localhost:4000`
-- File uploads land in `server/uploads/documents/` and are served at `/uploads/documents/<file>`
+- Local dev: frontend `http://localhost:5173`, API `http://localhost:4000`.
+- Production: frontend on Vercel, API on Render, database on MongoDB Atlas.
+- Verification uploads land in `server/uploads/documents/` and are streamed only
+  through the authenticated `GET /api/v1/documents/:fileName` route.
 
 ---
 
 ## 3. Tech stack
 
-**Frontend** (`D:\Hub`)
+**Frontend** (`/`)
 - React 19, Vite 8, TypeScript, Tailwind CSS 3, Oxlint
-- React Router 7 (with data-less route guards + role redirects)
+- React Router 7 (route guards + role redirects)
 - TanStack Query 5 (server state, invalidation, one `queryClient`)
-- Radix UI primitives (dialog, select, tabs, radio, checkbox, avatar, tooltipâ€¦)
-- `sonner` toasts Â· `class-variance-authority` + `tailwind-merge` Â· `lucide-react`
+- Radix UI primitives · `sonner` toasts · `lucide-react`
 - PWA via `vite-plugin-pwa` (service worker, offline fallback, manifest, shortcuts)
+- Build-time SEO plugin: canonical/OG/JSON-LD injection + `sitemap.xml` + `robots.txt`
 
-**Backend** (`D:\Hub\server`)
-- Node + Express 4 + TypeScript (run with `tsx watch`)
-- MongoDB via Mongoose 8 (14 collections, embedded subdocuments)
-- Zod 4 validation, `bcryptjs` password hashing, JWT access/refresh auth
-- `morgan` logging, `cors` (credentialed), cookie parsing, `express.static` for uploads
+**Backend** (`/server`)
+- Node + Express 4 + TypeScript (dev with `tsx watch`, prod with `node dist/index.js`)
+- MongoDB via Mongoose 8
+- Zod 4 validation · `bcryptjs` hashing · JWT access/refresh auth
+- `morgan` logging · credentialed `cors` allowlist · security headers · rate limiting
 
 ---
 
 ## 4. Repository layout
 
 ```
-D:/Hub
-â”œâ”€â”€ index.html, postcss.config.js, tailwind.config.js, vite.config.ts
-â”œâ”€â”€ public/                    # manifest, icons, offline.html, robots.txt
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ main.tsx              # providers: QueryClient, Auth, Tooltip, Toaster
-â”‚   â”œâ”€â”€ router/               # guards.tsx (LandingRoute/RoleRoute), index.tsx
-â”‚   â”œâ”€â”€ layouts/              # PublicLayout, AppLayout (mobile shell)
-â”‚   â”œâ”€â”€ components/           # ui/* (radix-based), nav/* (mobile shell), Brandâ€¦
-â”‚   â”œâ”€â”€ hooks/                # auth-context.ts + AuthProvider.tsx
-â”‚   â”œâ”€â”€ services/             # TanStack hooks per resource (users, appointmentsâ€¦)
-â”‚   â”œâ”€â”€ lib/                  # api client, constants, format, utils
-â”‚   â”œâ”€â”€ config/env.ts
-â”‚   â”œâ”€â”€ pages/public|user|professional|admin
-â”‚   â””â”€â”€ types/index.ts
-â””â”€â”€ server/
-    â”œâ”€â”€ src/
-    â”‚   â”œâ”€â”€ index.ts, app.ts, constants.ts
-    â”‚   â”œâ”€â”€ config/env.ts, lib/errors.ts, lib/response.ts, lib/db.ts
-    â”‚   â”œâ”€â”€ middleware/auth.ts, middleware/error.ts
-    â”‚   â”œâ”€â”€ models/           # 14 Mongoose models
-    â”‚   â”œâ”€â”€ routes/           # 13 routers (mounted at /api/v1/â€¦)
-    â”‚   â””â”€â”€ seed/             # demo data + reset
-    â””â”€â”€ uploads/documents     # professional verification uploads (runtime)
+.
+├── index.html, vite.config.ts, vercel.json, render.yaml
+├── .env.example               # frontend build-time vars
+├── public/                    # manifest, icons, offline.html, robots.txt
+├── src/
+│   ├── main.tsx               # providers: QueryClient, Auth, Tooltip, Toaster
+│   ├── router/                # guards.tsx, index.tsx
+│   ├── layouts/               # PublicLayout, AppLayout (mobile shell)
+│   ├── components/            # ui/*, nav/*, Brand, ProviderCard…
+│   ├── hooks/ services/ lib/ config/
+│   └── pages/public|user|professional|admin
+└── server/
+    ├── src/
+    │   ├── index.ts, app.ts, constants.ts
+    │   ├── config/env.ts, lib/{errors,response,db}.ts
+    │   ├── middleware/{auth,error,security,rateLimit}.ts
+    │   ├── models/            # Mongoose models
+    │   ├── routes/            # routers mounted at /api/v1/…
+    │   └── seed/              # demo data + reset
+    ├── .env.example
+    └── uploads/documents      # runtime verification uploads (gitignored)
 ```
 
 ---
 
 ## 5. Roles & access control
 
-Authentication uses a short-lived **JWT access token** (Bearer header) plus a **refresh-token cookie**. Guarding is enforced twice: **client-side** (route guards + conditional UI) and **server-side** (`requireAuth`, `requireRole`, and ownership checks).
+Auth uses a short-lived **JWT access token** (Bearer header) plus an httpOnly
+**refresh-token cookie**. Guarding is enforced twice: **client-side** (route
+guards + conditional UI) and **server-side** (`requireAuth`, `requireRole`,
+ownership/IDOR checks).
 
-- `requireAuth` â€” validates Bearer token, attaches `req.userId`.
-- `requireRole('PROFESSIONAL' | 'ADMIN')` â€” role gate.
-- Ownership checks â€” e.g. appointments only by the user or the assigned professional; professional routes resolve the profile via `{ user: req.userId }`.
-- Route guards (`src/router/guards.tsx`):
-  - `LandingRoute` â€” authenticated users hitting `/` are sent to their dashboard (incomplete `USER` â†’ `/onboarding`).
-  - `RoleRoute` â€” nested route groups `/app`, `/professional`, `/admin` load only for the right role and **redirect** otherwise (a `USER` can no longer land on a blank professional page).
-  - `OnboardingRoute` â€” non-`USER` roles never see onboarding.
+- `requireAuth` — validates the Bearer token, attaches `req.userId`.
+- `requireRole(...)` — role gate.
+- Ownership checks — e.g. appointments only by the user or the assigned professional.
+- Route guards (`src/router/guards.tsx`): `LandingRoute`, `RoleRoute`, `OnboardingRoute`.
 
 ---
 
 ## 6. Feature inventory
 
 ### Public (no login)
-- Landing page, How it works, Safety notice, Emergency contacts, Contact/support
-- Browse professionals (search, provider type, city, specializations) incl. weekly availability and **slot-aware booking dialog**
-- Resource library (articles, categories, featured, reading time)
+Landing page, How it works, Safety notice, Emergency contacts, Contact/support,
+browse professionals (search, provider type, city, specialisations, weekly
+availability + slot-aware booking dialog), resource library.
 
 ### User dashboard & onboarding (`/app`, `/onboarding`)
-- Onboarding wizard: **consent â†’ preferences â†’ quick assessment** (with safety flag), progress status
-- **Check-in** â€” daily mood (5-point scale), contributing factors, free note (â‰¤500 chars), personal wellbeing trend and most-common factors; available to the user's care team
-- **Appointments** â€” request from a professional's page, upcoming/past tabs, detail dialog, reschedule or cancel with confirmations, type-aware "join" (secure chat â†’ messages, call â†’ messages receive the link, in-person â†’ location)
-- **Messages** â€” secure conversations with a professional, unread counts, mark read, report conversation
-- **Community** â€” group list, join/leave, per-group posts with **reactions (supportive/thoughtful/grateful)**, replies, report-to-moderation, moderated badges
-- Notifications feed, profile & settings, resources, help pages
+- Onboarding wizard: consent → preferences → quick assessment (with safety flag).
+- **Check-in** — daily mood, contributing factors, free note, wellbeing trend.
+- **Appointments** — request, upcoming/past, reschedule/cancel, type-aware join.
+- **Messages** — secure conversations, unread counts, mark read, report.
+- **Community** — groups, join/leave, posts with reactions, replies, report.
+- Notifications feed, profile & settings, resources, help pages.
 
 ### Professional workspace (`/professional`)
-- **Profile** â€” basics, offering (languages, support areas, session types, fee RWF), availability template (day Ã— start/end, enabled)
-- **Document upload for verification** â€” licence / degree certificate (PDF/JPG/PNG/WebP â‰¤ 5 MB), stored on disk, listed with status, viewable by admins; deletion locked once verified
-- **Submit for verification** â€” requires â‰¥1 uploaded document; admin reviews and decides
-- **Dashboard** â€” today's appointments, pending requests, unread messages, follow-ups, weekly/completed sessions, profile completeness
-- **Appointments** â€” request queue, confirm/complete/cancel/no-show/reschedule (state machine enforced server-side)
-- **Clients** â€” aggregated, least-privilege client list and client detail (appointments summary, conversation, follow-ups)
-- **Follow-ups** â€” pending/upcoming list, mark complete
+Profile & offering, document upload for verification, submit for verification,
+dashboard, appointment state machine, least-privilege client list/detail,
+follow-ups, messages.
 
 ### Admin (`/admin`)
-- Dashboard (counts: users, professionals, verification queue, sessions, reports, safeguarding, resources, groups)
-- Users (list/search, suspend/activate), Professionals (filter by verification status, review documents, approve/suspend), Pending queue
-- Community reports â€” **dismiss report**, hide/restore post
-- Resources â€” create/edit/publish/delete
-- Safeguarding case workflow (statuses + actions), audit logs, analytics (date-grouped aggregates)
+Dashboard counts, users, professionals & verification queue (document review),
+community report moderation, resource management, safeguarding case workflow,
+audit logs, analytics.
 
 ---
 
 ## 7. API reference
 
-All routes under `http://localhost:4000/api/v1`.
+Base URL locally: `http://localhost:4000/api/v1`.
 
 ### Auth (`/auth`)
 | Method / path | Notes |
 | --- | --- |
-| `POST /register` | Creates user (+ `Professional` draft for `PROFESSIONAL` role) |
-| `POST /login` | Sets refresh cookie, returns access token + user |
+| `POST /register` | Creates user (+ `Professional` draft for `PROFESSIONAL`) · rate-limited |
+| `POST /login` | Sets refresh cookie, returns access token + user · rate-limited |
 | `POST /refresh` | New access token from cookie |
 | `POST /logout` | Clears refresh cookie |
 | `GET /me` | Current user |
 
 ### Users (`/users`)
-- `PATCH /me` â€” profile update
-- `POST /onboarding/consent`, `POST /onboarding/preferences`, `POST /onboarding/assessment`, `GET /onboarding/status`
-- `POST /check-ins`, `GET /check-ins`, `GET /wellbeing/trend`
+`PATCH /me` · `POST /onboarding/consent|preferences|assessment` · `GET /onboarding/status` · `POST /check-ins` · `GET /check-ins` · `GET /wellbeing/trend`
 
-### Professionals (public) (`/professionals`)
-- `GET /` (search/filter/paginate, verified only), `GET /cities`, `GET /:id`, `GET /:id/availability`
+### Professionals — public (`/professionals`)
+`GET /` (search/filter/paginate, verified only) · `GET /cities` · `GET /:id` · `GET /:id/availability`
 
 ### Professional self-service (`/professional`)
-- `GET /me`, `PATCH /me`, `POST /me/submit`, `POST /me/documents`, `DELETE /me/documents/:docId`
-- `GET /dashboard`, `GET /clients`, `GET /clients/:id`
+`GET /me` · `PATCH /me` · `POST /me/submit` · `POST /me/documents` · `DELETE /me/documents/:docId` · `GET /dashboard` · `GET /clients` · `GET /clients/:id`
 
 ### Matching (`/matching`)
-- `GET /recommendations`
+`GET /recommendations`
 
 ### Appointments (`/appointments`)
-- `GET /` (user) / `GET /professional/appointments` â€” own sessions
-- `GET /upcoming` Â· `POST /` (validates: future date, approved active professional, no overlap, within availability) Â· `PATCH /:id` (reschedule/cancel) Â· `PATCH /:id/status` (state machine) Â· `DELETE /:id`
-  - Transitions enforced: user â†’ cancel/reschedule; professional â†’ confirm/complete/cancel/no-show/reschedule; terminal statuses immutable; notifications to the other party on every change.
+`GET /` · `GET /upcoming` · `POST /` · `PATCH /:id` · `PATCH /:id/status` · `DELETE /:id`
+Transitions are enforced server-side (terminal states are immutable); the other party is notified on every change.
 
 ### Conversations (`/conversations`)
-- `GET /`, `POST /` (start with a professional), `GET /:id`, `GET /:id/messages`, `POST /:id/messages`, `PATCH /:id/read`, `POST /:id/report`
+`GET /` · `POST /` · `GET /:id` · `GET /:id/messages` · `POST /:id/messages` · `PATCH /:id/read` · `POST /:id/report`
 
-### Resources (`/resources`) Â· `GET /`, `GET /featured`, `GET /:slug`, `GET /categories`
+### Resources (`/resources`)
+`GET /` · `GET /featured` · `GET /:slug` · `GET /categories`
 
 ### Community (`/community`)
-- `GET /groups`, `GET /groups/mine`, `GET /groups/:id`, `GET|POST /groups/:id/posts`
-- `POST /posts/:id/comments`, `POST /posts/:id/reactions` (toggle, per-kind counts + `my`), `POST /groups/:id/join`, `POST /groups/:id/leave`, `POST /posts/:id/report`
+`GET /groups` · `GET /groups/mine` · `GET /groups/:id` · `GET|POST /groups/:id/posts` · `POST /posts/:id/comments` · `POST /posts/:id/reactions` · `POST /groups/:id/join|leave` · `POST /posts/:id/report`
 
-### Notifications (`/notifications`) Â· `GET /`, `PATCH /:id/read`, `PATCH /read-all`
+### Notifications (`/notifications`)
+`GET /` · `PATCH /:id/read` · `PATCH /read-all`
 
-### Follow-ups (`/follow-ups`) Â· `GET /`, `PATCH /:id/complete`
+### Follow-ups (`/follow-ups`) · `GET /` · `PATCH /:id/complete`
 
-### Emergency (`/emergency`) Â· `GET /contacts` (crisis help numbers)
+### Emergency (`/emergency`) · `GET /contacts`
 
 ### Admin (`/admin`)
-- `GET /dashboard`, `GET /users`, `PATCH /users/:id/status`
-- `GET /professionals`, `GET /professionals/pending`, `PATCH /professionals/:id/verification`
-- `GET /safeguarding`, `PATCH /safeguarding/:id`
-- `GET|POST /resources`, `PATCH|DELETE /resources/:id`
-- `GET /community/reports`, `PATCH /community/posts/:id/moderate` (`hidden` and/or `resolve`)
-- `GET /analytics`, `GET /audit-logs`
+`GET /dashboard` · `GET /users` · `PATCH /users/:id/status` · `GET /professionals` · `GET /professionals/pending` · `PATCH /professionals/:id/verification` · `GET /safeguarding` · `PATCH /safeguarding/:id` · `GET|POST /resources` · `PATCH|DELETE /resources/:id` · `GET /community/reports` · `PATCH /community/posts/:id/moderate` · `GET /analytics` · `GET /audit-logs`
 
-### File serving
-- `GET /uploads/documents/<file>` â€” uploaded verification documents (express static, no auth).
+### Documents & health
+- `GET /documents/:fileName` — stream an uploaded verification document (authenticated).
+- `GET /health` and `GET /api/v1/health` — service + database status (used by Render).
 
 ---
 
-## 8. Data model (`server/src/models/`, MongoDB `nsangiza_hub`)
+## 8. Data model (`server/src/models/`)
 
 | Collection | Key contents |
 | --- | --- |
 | `User` | role, profile, onboarding state, notification settings |
-| `Professional` | public profile, `availability[]` (template), `documents[]` (label/status/fileName), `verification` (status/documents/review), `onboarding`, `reviews` |
-| `Appointment` | userâ†”professional, date/endDate, type, status, joinToken, cancelledBy, notifications on every transition |
-| `Conversation` / `Message` | participants, unread map, message kinds (text/emoji/audio/attachment/system), report flag |
+| `Professional` | public profile, `availability[]`, `documents[]`, `verification`, `reviews` |
+| `Appointment` | user↔professional, date/endDate, type, status, joinToken, cancellation |
+| `Conversation` / `Message` | participants, unread map, message kinds, report flag |
 | `CheckIn` | mood, factors[], note, createdAt |
-| `CommunityGroup` / `CommunityPost` | membership, counts; posts carry `reactions` (counts), `reactedBy` (per-kind ObjectIds), `comments[]`, report/moderate flags |
+| `CommunityGroup` / `CommunityPost` | membership, counts, reactions, comments, report/moderate flags |
 | `Resource` | articles with categories, language, review/publish state |
 | `Notification` | per-user feed with deep links |
-| `FollowUp` | professionalâ†”user follow-ups, dueAt, status |
+| `FollowUp` | professional↔user follow-ups, dueAt, status |
 | `Assessment` | onboarding assessment + safety flags |
-| `SafeguardingCase` | admin case workflow (actions, notes) |
-| `AuditLog` | admin verification & moderation trail |
+| `SafeguardingCase` | admin case workflow |
+| `AuditLog` | verification & moderation trail |
 
 ---
 
 ## 9. Privacy & security notes
 
-- Passwords hashed with `bcryptjs`; JWT access tokens short-lived, refresh in an httpOnly-style cookie.
-- Authorisation checks happen server-side for every sensitive route (role + ownership/IDOR guards).
-- Professional access to client data follows **least privilege** â€” summaries and aggregated info first.
-- Check-ins are private to the user and their supporting professionals; community posts are public within an authenticated, moderated space.
-- Uploads: size/mime validated (â‰¤ 5 MB, base64 JSON), stored outside the API, served read-only; `.gitignore`d runtime folder.
-- No real SMS/email delivery â€” email is collected server-side (outbox pattern); audio/video links are coordinated inside secure messages (no embedded WebRTC).
+- Passwords hashed with `bcryptjs`; access tokens short-lived, refresh token in an httpOnly cookie.
+- Server-side authorisation on every sensitive route (role + ownership/IDOR guards).
+- Professional access to client data follows least privilege — summaries first.
+- Check-ins are private to the user and their supporting professionals.
+- Uploads are size/mime validated, stored on disk outside the public static root
+  and streamed only through the authenticated documents route.
+- Security headers (`nosniff`, frame deny, referrer policy, HSTS in production)
+  and rate limiting on authentication endpoints.
+- No real SMS/email delivery — audio/video links are coordinated inside secure messages.
 
 ---
 
-## 10. Getting started
+## 9b. Data model note / limitations
 
-Requirements: Node â‰¥ 20, a local MongoDB at `mongodb://127.0.0.1:27017` (or set `MONGODB_URI`).
+- **Ephemeral uploads on Render:** the free Render plan has an ephemeral
+  filesystem, so verification uploads are lost on redeploy/restart. Attach a
+  Render disk (paid) or move uploads to object storage (S3/Cloudinary) for
+  production.
+- **Cross-site cookies:** when frontend (Vercel) and API (Render) are on
+  different sites, the refresh cookie must be `SameSite=None; Secure=true`
+  (see `COOKIE_SAME_SITE` / `COOKIE_SECURE` below).
+
+---
+
+## 10. Getting started (local)
+
+Requirements: **Node ≥ 20**, MongoDB (local or Atlas).
 
 ```bash
 # 1. Backend
 cd server
+cp .env.example .env          # then edit .env
 npm install
-npm run dev          # http://localhost:4000  (tsx watch)
+npm run seed                  # first run only; seed:reset to drop & reseed
+npm run dev                   # http://localhost:4000
 
-# 2. Seed demo data (once)
-npm run seed         # or npm run seed:reset
-
-# 3. Frontend (new terminal)
-cd ..                # back to D:/Hub
+# 2. Frontend (new terminal, repo root)
 npm install
-npm run dev          # http://localhost:5173  (proxies /api + /uploads â†’ 4000)
+cp .env.example .env          # optional; leave VITE_API_BASE_URL empty for the proxy
+npm run dev                   # http://localhost:5173
 ```
 
-Vite proxies `/api` and `/uploads` to `http://localhost:4000`, so both dev servers run side by side with no CORS friction. In production the frontend is built and the API serves the static client + uploads.
+The Vite dev server proxies `/api` and `/uploads` to `http://localhost:4000`, so
+the two dev servers work together without CORS configuration.
 
 ---
 
-## 11. Demo accounts
+## 10b. Environment variables
 
-Every seeded account uses the password **`Nsangiza@2026`**:
+### Frontend (`.env` — build-time, `VITE_` prefixed only)
+
+| Variable | Example | Purpose |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | `https://nsangiza-api.onrender.com/api/v1` | API base URL. Empty in dev to use the Vite proxy. |
+| `VITE_SITE_URL` | `https://nsangiza.vercel.app` | Public origin for canonical URLs, OG tags and `sitemap.xml`. |
+
+### Backend (`server/.env`)
+| Variable | Example | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | `production` enables strict env validation + HSTS. |
+| `PORT` | `4000` | Render injects this automatically. |
+| `MONGODB_URI` | `mongodb+srv://…/nsangiza_hub?retryWrites=true&w=majority` | **Required in production.** Include the database name. |
+| `JWT_ACCESS_SECRET` | *(random, ≥ 32 chars)* | **Required in production.** |
+| `JWT_REFRESH_SECRET` | *(random, ≥ 32 chars)* | **Required in production.** |
+| `JWT_ACCESS_EXPIRES_IN` | `15m` | Access-token lifetime. |
+| `JWT_REFRESH_EXPIRES_IN` | `30d` | Refresh-token lifetime. |
+| `CLIENT_ORIGIN` | `https://nsangiza.vercel.app` | Comma-separated CORS allowlist. |
+| `COOKIE_SAME_SITE` | `none` | `none` for cross-site (Vercel↔Render); `lax` for local. |
+| `COOKIE_SECURE` | `true` | `true` whenever `COOKIE_SAME_SITE=none`. |
+| `COOKIE_DOMAIN` | *(optional)* | e.g. `.your-domain.com` to share the cookie across subdomains. |
+
+---
+
+## 10c. Seeding
+
+```bash
+cd server
+npm run seed         # insert demo data (skips if already seeded)
+npm run seed:reset   # DROP the seed collections, then re-insert
+```
+
+The seed script uses `MONGODB_URI` from `server/.env`, so to seed MongoDB Atlas
+just point `MONGODB_URI` at your Atlas cluster and run `npm run seed:reset`.
+
+> Some networks block DNS **SRV** lookups. If `mongodb+srv://…` fails with
+> `querySrv ECONNREFUSED`, use the direct shard-list connection string instead
+> (`mongodb://user:pass@shard-00-00…:27017,shard-00-01…:27017,shard-00-02…:27017/db?ssl=true&replicaSet=…&authSource=admin`).
+
+---
+
+## 11. Deployment
+
+Three pieces: **MongoDB Atlas** (database) → **Render** (API) → **Vercel**
+(frontend). Deploy in that order and wire the URLs together at the end.
+
+### 11.1 MongoDB Atlas
+1. Create a free cluster and a database user.
+2. Add a network access rule (Render's egress IPs, or `0.0.0.0/0` to start).
+3. Copy the connection string and **add the database name**:
+   `mongodb+srv://USER:PASS@cluster0.xxxxx.mongodb.net/nsangiza_hub?retryWrites=true&w=majority`
+4. Seed from your machine: set `server/.env` `MONGODB_URI` to that string and run
+   `npm run seed:reset`.
+
+### 11.2 Render (API)
+- **Blueprint:** create a new Blueprint from this repo — `render.yaml` provisions
+  the service (`rootDir: server`, build `npm install && npm run build`, start
+  `npm run start`, health check `/health`).
+- **Or manually:** Web Service → root directory `server` → build
+  `npm install && npm run build` → start `npm run start` → health check `/health`.
+- Set environment variables:
+  - `NODE_ENV=production`
+  - `MONGODB_URI=<Atlas string with /nsangiza_hub>`
+  - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (long random strings)
+  - `CLIENT_ORIGIN=https://<your-vercel-domain>` (add custom domains too, comma-separated)
+  - `COOKIE_SAME_SITE=none`, `COOKIE_SECURE=true`
+- Note the Render URL, e.g. `https://nsangiza-hub-api.onrender.com`.
+
+### 11.3 Vercel (frontend)
+- Import this repository. Vercel auto-detects Vite; `vercel.json` sets the build,
+  the SPA rewrite and cache headers.
+- Set environment variables:
+  - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api/v1`
+  - `VITE_SITE_URL=https://<your-vercel-domain>`
+- Deploy. Then update Render's `CLIENT_ORIGIN` to the final Vercel domain and
+  redeploy the API.
+
+---
+
+## 12. Demo accounts
+
+Password for all demo accounts: `Nsangiza@2026`.
 
 | Role | Email |
 | --- | --- |
 | User | `demo@nsangiza.rw` |
-| Professional | `prof@nsangiza.rw` (plus `p2@â€¦p15@example.rw`) |
+| Professional | `prof@nsangiza.rw` |
 | Admin | `admin@nsangiza.rw` |
 | Moderator | `moderator@nsangiza.rw` |
 | Supervisor | `supervisor@nsangiza.rw` |
 
 ---
 
-## 12. Internationalisation (i18n)
+## 13. Scripts
 
-Core flows are translation-ready for **English, Kinyarwanda and French** (language selection is stored per user). Longer admin/reference copy is deliberately English-only.
+**Frontend** (`/`)
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Vite dev server (proxies `/api` + `/uploads`) |
+| `npm run build` | Type-check + production build (also writes `sitemap.xml`/`robots.txt`) |
+| `npm run lint` | Oxlint |
+| `npm run preview` | Preview the production build |
 
----
-
-## 13. PWA / mobile
-
-- Installable (manifest, icons, offline fallback) with `display: standalone`, portrait orientation and app shortcuts for **Check-in** and **Messages**.
-- Small screens (< 1024 px) get a native-app shell: floating bottom taskbar with active-tab pill, a bottom-sheet "More" panel, per-tab scroll memory, offline strip, safe-area insets and tap feedback; desktop keeps the full sidebar.
-- Service worker precaches the app shell and caches professional/resource APIs (network-first).
-
----
-
-## 14. Useful commands
-
-```bash
-# Frontend (D:/Hub)
-npm run dev          # dev server
-npm run build        # typeScript check (tsc -b) + production build
-npm run lint         # oxlint
-npm run preview      # preview the production build
-
-# Backend (D:/Hub/server)
-npm run dev          # tsx watch dev server
-npm run typecheck    # tsc --noEmit
-npm run build        # compile to dist/
-npm run seed         # seed demo data
-npm run seed:reset   # wipe + reseed
-```
-
----
-
-## 15. Safer engineering conventions (as built)
-
-- Every data-changing appointment action notifies the other party and enforces a **transition matrix** (terminal states are immutable).
-- Community reactions are **one per user per kind per post** and toggle atomically server-side.
-- Booking validates the chosen time against the professional's **availability template** and **existing overlap**; the frontend offers only generated slot times when the template is set.
-- Report/dismiss + hide/restore give admins a full moderation loop; audit logs capture verification and moderation decisions.
+**Backend** (`/server`)
+| Command | Description |
+| --- | --- |
+| `npm run dev` | `tsx watch src/index.ts` |
+| `npm run build` | `tsc` → `dist/` |
+| `npm run start` | `node dist/index.js` |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run seed` / `seed:reset` | Insert / reset demo data |

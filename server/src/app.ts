@@ -2,8 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import morgan from 'morgan'
+import mongoose from 'mongoose'
 import { env } from './config/env'
 import { ok } from './lib/response'
+import { securityHeaders } from './middleware/security'
 import { errorHandler, notFoundHandler } from './middleware/error'
 
 import authRouter from './routes/auth'
@@ -25,9 +27,20 @@ const app = express()
 
 app.set('trust proxy', 1)
 
+const allowedOrigins = env.clientOrigin
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+app.use(securityHeaders)
 app.use(
   cors({
-    origin: env.clientOrigin.split(',').map((o) => o.trim()),
+    origin(origin, callback) {
+      // Allow same-origin / server-to-server requests (no Origin header).
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+      // Unknown origins get no CORS headers rather than a hard error.
+      return callback(null, false)
+    },
     credentials: true,
   }),
 )
@@ -37,11 +50,21 @@ if (env.nodeEnv !== 'test') {
   app.use(morgan('dev'))
 }
 
-// Uploaded verification documents are never served anonymously. They are
-// streamed only through the authenticated /api/v1/documents route.
-app.get('/api/v1/health', (_req, res) => {
-  res.json(ok({ status: 'ok', service: 'nsangiza-hub-api', time: new Date().toISOString() }))
-})
+// Health check used by Render (and any uptime monitor). Reports DB connectivity
+// so a deploy that cannot reach MongoDB is marked unhealthy.
+const health = (_req: express.Request, res: express.Response): void => {
+  const dbUp = mongoose.connection.readyState === 1
+  res.status(dbUp ? 200 : 503).json(
+    ok({
+      status: dbUp ? 'ok' : 'degraded',
+      service: 'nsangiza-hub-api',
+      database: dbUp ? 'up' : 'down',
+      time: new Date().toISOString(),
+    }),
+  )
+}
+app.get('/health', health)
+app.get('/api/v1/health', health)
 
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/users', usersRouter)

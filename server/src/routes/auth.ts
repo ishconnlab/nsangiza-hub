@@ -3,8 +3,10 @@ import bcrypt from 'bcryptjs'
 import { isValidObjectId } from 'mongoose'
 import { z } from 'zod'
 import { ROLES } from '../constants'
+import { env } from '../config/env'
 import { ApiError, asyncHandler } from '../lib/errors'
 import { ok } from '../lib/response'
+import { rateLimit } from '../middleware/rateLimit'
 import { requireAuth, signAccessToken, signRefreshToken, verifyRefreshToken, type AuthedRequest } from '../middleware/auth'
 import User from '../models/User'
 import type { UserSchema } from '../models/User'
@@ -12,6 +14,27 @@ import Professional from '../models/Professional'
 import AuditLog from '../models/AuditLog'
 
 const router = Router()
+
+const REFRESH_COOKIE = 'nh_refresh'
+const REFRESH_MAX_AGE = 30 * 24 * 60 * 60 * 1000
+
+// Refresh cookie options. When the frontend (Vercel) and API (Render) live on
+// different sites this must be SameSite=None + Secure=False; in local dev it is
+// SameSite=Lax. Controlled by env so the same build works in both places.
+const refreshCookieOptions = {
+  httpOnly: true,
+  sameSite: env.cookieSameSite,
+  secure: env.cookieSecure,
+  maxAge: REFRESH_MAX_AGE,
+  path: '/api/v1/auth',
+  ...(env.cookieDomain ? { domain: env.cookieDomain } : {}),
+} as const
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: 'Too many authentication attempts. Please try again in a few minutes.',
+})
 
 const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -43,6 +66,7 @@ function publicUser(user: UserWithId) {
 
 router.post(
   '/register',
+  authLimiter,
   asyncHandler(async (req, res) => {
     const body = registerSchema.parse(req.body)
     const existing = await User.findOne({ email: body.email.toLowerCase() }).lean()
@@ -74,13 +98,7 @@ router.post(
     await AuditLog.create({ actor: String(user._id), action: 'auth.register', resource: 'User', resourceId: String(user._id) })
 
     const accessToken = signAccessToken(String(user._id), user.role)
-    res.cookie('nh_refresh', signRefreshToken(String(user._id)), {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      path: '/api/v1/auth',
-    })
+    res.cookie(REFRESH_COOKIE, signRefreshToken(String(user._id)), refreshCookieOptions)
 
     res.status(201).json(
       ok(
@@ -98,6 +116,7 @@ const loginSchema = z.object({
 
 router.post(
   '/login',
+  authLimiter,
   asyncHandler(async (req, res) => {
     const body = loginSchema.parse(req.body)
     const user = await User.findOne({ email: body.email.toLowerCase() }).select('+passwordHash').lean()
@@ -111,13 +130,7 @@ router.post(
     await AuditLog.create({ actor: String(user._id), action: 'auth.login', resource: 'User', resourceId: String(user._id) })
 
     const accessToken = signAccessToken(String(user._id), user.role)
-    res.cookie('nh_refresh', signRefreshToken(String(user._id)), {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      path: '/api/v1/auth',
-    })
+    res.cookie(REFRESH_COOKIE, signRefreshToken(String(user._id)), refreshCookieOptions)
 
     res.json(ok({ user: publicUser(user), accessToken }, 'Welcome back.'))
   }),
@@ -145,7 +158,12 @@ router.post(
 router.post(
   '/logout',
   asyncHandler(async (_req, res) => {
-    res.clearCookie('nh_refresh', { path: '/api/v1/auth' })
+    res.clearCookie(REFRESH_COOKIE, {
+      path: '/api/v1/auth',
+      sameSite: env.cookieSameSite,
+      secure: env.cookieSecure,
+      ...(env.cookieDomain ? { domain: env.cookieDomain } : {}),
+    })
     res.json(ok({}, 'Signed out.'))
   }),
 )

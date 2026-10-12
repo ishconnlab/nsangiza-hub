@@ -427,7 +427,7 @@ export default function Home() {
                 className="absolute inset-0 opacity-[0.12] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]"
               />
               <Avatar className="relative h-36 w-36 border-4 border-white/25 shadow-xl sm:h-44 sm:w-44">
-                <AvatarImage src="/images/founder.jpg" alt={t('home.founder.name')} />
+                <AvatarImage src="/images/yabesi.png" alt={t('home.founder.name')} />
                 <AvatarFallback className="bg-white/15 text-4xl font-bold text-white">
                   {initials(t('home.founder.name'))}
                 </AvatarFallback>

@@ -1,0 +1,37 @@
+# Render Blueprint for the Nsangiza Hub API.
+# Deploy via Render Dashboard > New > Blueprint, pointing at this repo.
+# Secrets marked `sync: false` are entered in the Render dashboard, never here.
+services:
+  - type: web
+    name: nsangiza-hub-api
+    runtime: node
+    plan: free
+    # Closest Render region to the Atlas cluster (af-south-1). Change if needed.
+    region: frankfurt
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+    # NOTE: the free plan has an ephemeral filesystem. Professional verification
+    # uploads (server/uploads) are lost on redeploy/restart. Add a Render disk
+    # (paid) or move uploads to object storage (S3/Cloudinary) for production.
