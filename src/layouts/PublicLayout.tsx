@@ -1,6 +1,6 @@
 import { Suspense, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { ArrowRight, Menu, MessageCircleQuestion, ShieldCheck, UserPlus } from 'lucide-react'
+import { ArrowRight, Menu, UserPlus } from 'lucide-react'
 import Brand from '../components/Brand'
 import { Loading } from '../components/PageHeader'
 import { LanguageSwitcher } from '../components/nav/LanguageSwitcher'
@@ -138,50 +138,6 @@ export default function PublicLayout() {
           <Outlet />
         </Suspense>
       </main>
-
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="container-hub py-10">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div className="md:col-span-2">
-              <Brand to="/" />
-              <p className="mt-3 max-w-sm text-sm text-hub-muted">{t('footer.tagline')}</p>
-              <div className="mt-4 flex items-center gap-3 text-sm text-hub-muted">
-                <span className="inline-flex items-center gap-1">
-                  <ShieldCheck className="h-4 w-4 text-hub-primary" />
-                  {t('footer.private')}
-                </span>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-hub-text">{t('footer.explore')}</p>
-              <ul className="mt-3 space-y-2 text-sm text-hub-muted">
-                <li><Link to="/professionals" className="hover:text-hub-primary">{t('footer.findSupport')}</Link></li>
-                <li><Link to="/how-it-works" className="hover:text-hub-primary">{t('footer.howItWorks')}</Link></li>
-                <li><Link to="/resources" className="hover:text-hub-primary">{t('footer.wellbeing')}</Link></li>
-                <li><Link to="/help/emergency" className="hover:text-hub-primary">{t('footer.emergency')}</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-hub-text">{t('footer.company')}</p>
-              <ul className="mt-3 space-y-2 text-sm text-hub-muted">
-                <li><Link to="/join" className="hover:text-hub-primary">{t('footer.forProfessionals')}</Link></li>
-                <li><Link to="/safety" className="hover:text-hub-primary">{t('footer.safety')}</Link></li>
-                <li><Link to="/privacy" className="hover:text-hub-primary">{t('footer.privacy')}</Link></li>
-                <li><Link to="/terms" className="hover:text-hub-primary">{t('footer.terms')}</Link></li>
-                <li>
-                  <Link to="/help/contact" className="inline-flex items-center gap-1 hover:text-hub-primary">
-                    <MessageCircleQuestion className="h-4 w-4" />
-                    {t('footer.contact')}
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-8 border-t border-slate-100 pt-5 text-xs text-slate-400">
-            © {new Date().getFullYear()} {t('footer.crisis')}
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

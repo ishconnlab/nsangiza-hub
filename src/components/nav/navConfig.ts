@@ -14,12 +14,13 @@ import {
   UsersRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import type { TranslationKey } from '../../i18n/translations'
 
 export interface NavItem {
   to: string
-  label: string
+  labelKey: TranslationKey
   /** compact label for the bottom taskbar when space is tight */
-  shortLabel?: string
+  shortKey?: TranslationKey
   icon: LucideIcon
   end?: boolean
   /** shown in the floating bottom taskbar on small screens */
@@ -29,35 +30,35 @@ export interface NavItem {
 }
 
 export const USER_NAV: NavItem[] = [
-  { to: '/app', label: 'Home', icon: LayoutDashboard, end: true, bar: true },
-  { to: '/app/check-in', label: 'Check in', icon: Smile, bar: true },
-  { to: '/app/appointments', label: 'Appointments', shortLabel: 'Sessions', icon: CalendarDays, bar: true },
-  { to: '/app/messages', label: 'Messages', icon: MessageSquare, bar: true },
-  { to: '/app/community', label: 'Community', icon: UsersRound },
-  { to: '/app/resources', label: 'Resources', icon: FolderOpen },
-  { to: '/app/notifications', label: 'Notifications', shortLabel: 'Alerts', icon: Bell },
-  { to: '/app/profile', label: 'Profile & privacy', shortLabel: 'Profile', icon: UserCircle },
+  { to: '/app', labelKey: 'navApp.home', icon: LayoutDashboard, end: true, bar: true },
+  { to: '/app/check-in', labelKey: 'navApp.checkIn', icon: Smile, bar: true },
+  { to: '/app/appointments', labelKey: 'navApp.appointments', shortKey: 'navApp.sessions', icon: CalendarDays, bar: true },
+  { to: '/app/messages', labelKey: 'navApp.messages', icon: MessageSquare, bar: true },
+  { to: '/app/community', labelKey: 'navApp.community', icon: UsersRound },
+  { to: '/app/resources', labelKey: 'navApp.resources', icon: FolderOpen },
+  { to: '/app/notifications', labelKey: 'navApp.notifications', shortKey: 'navApp.alerts', icon: Bell },
+  { to: '/app/profile', labelKey: 'navApp.profile', shortKey: 'navApp.profileName', icon: UserCircle },
 ]
 
 export const PRO_NAV: NavItem[] = [
-  { to: '/professional', label: 'Dashboard', icon: LayoutDashboard, end: true, bar: true },
-  { to: '/professional/appointments', label: 'Sessions', icon: CalendarDays, bar: true },
-  { to: '/professional/clients', label: 'Clients', icon: UsersRound, bar: true },
-  { to: '/professional/messages', label: 'Messages', icon: MessageSquare, bar: true },
-  { to: '/professional/profile', label: 'Profile & onboarding', shortLabel: 'Profile', icon: UserRound },
-  { to: '/professional/availability', label: 'Availability', icon: Clock3 },
-  { to: '/professional/follow-ups', label: 'Follow-ups', icon: LifeBuoy },
-  { to: '/professional/notifications', label: 'Notifications', shortLabel: 'Alerts', icon: Bell },
+  { to: '/professional', labelKey: 'navApp.dashboard', icon: LayoutDashboard, end: true, bar: true },
+  { to: '/professional/appointments', labelKey: 'navApp.sessions', icon: CalendarDays, bar: true },
+  { to: '/professional/clients', labelKey: 'navApp.clients', icon: UsersRound, bar: true },
+  { to: '/professional/messages', labelKey: 'navApp.messages', icon: MessageSquare, bar: true },
+  { to: '/professional/profile', labelKey: 'navApp.proProfile', shortKey: 'navApp.profileName', icon: UserRound },
+  { to: '/professional/availability', labelKey: 'navApp.availability', icon: Clock3 },
+  { to: '/professional/follow-ups', labelKey: 'navApp.followUps', icon: LifeBuoy },
+  { to: '/professional/notifications', labelKey: 'navApp.notifications', shortKey: 'navApp.alerts', icon: Bell },
 ]
 
 export const ADMIN_NAV: NavItem[] = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true, bar: true },
-  { to: '/admin/users', label: 'Users', icon: UsersRound, bar: true, adminOnly: true },
-  { to: '/admin/professionals', label: 'Professionals', shortLabel: 'Providers', icon: UserRound, bar: true },
-  { to: '/admin/safeguarding', label: 'Safeguarding', shortLabel: 'Safety', icon: ShieldAlert },
-  { to: '/admin/resources', label: 'Resources', icon: FolderOpen, adminOnly: true },
-  { to: '/admin/community', label: 'Community moderation', shortLabel: 'Moderation', icon: MessageSquare },
-  { to: '/admin/audit-logs', label: 'Audit logs', shortLabel: 'Audit', icon: Tickets, adminOnly: true },
+  { to: '/admin', labelKey: 'navApp.dashboard', icon: LayoutDashboard, end: true, bar: true },
+  { to: '/admin/users', labelKey: 'navApp.users', icon: UsersRound, bar: true, adminOnly: true },
+  { to: '/admin/professionals', labelKey: 'navApp.professionals', shortKey: 'navApp.providers', icon: UserRound, bar: true },
+  { to: '/admin/safeguarding', labelKey: 'navApp.safeguarding', shortKey: 'navApp.safety', icon: ShieldAlert },
+  { to: '/admin/resources', labelKey: 'navApp.resources', icon: FolderOpen, adminOnly: true },
+  { to: '/admin/community', labelKey: 'navApp.communityModeration', shortKey: 'navApp.moderation', icon: MessageSquare },
+  { to: '/admin/audit-logs', labelKey: 'navApp.auditLogs', shortKey: 'navApp.audit', icon: Tickets, adminOnly: true },
 ]
 
 export function navFor(role?: string | null): NavItem[] {
@@ -79,12 +80,12 @@ export function sheetNav(role?: string | null): NavItem[] {
   return navFor(role).filter((i) => !i.bar)
 }
 
-/** current page title derived from the pathname (falls back to the closest parent section) */
-export function pageTitleFor(pathname: string, role?: string | null): string {
+/** current page title key derived from the pathname (falls back to the closest parent section) */
+export function pageTitleKeyFor(pathname: string, role?: string | null): TranslationKey {
   const nav = navFor(role)
-  if (pathname === nav[0].to) return nav[0].label
+  if (pathname === nav[0].to) return nav[0].labelKey
   const match = [...nav]
     .sort((a, b) => b.to.length - a.to.length)
     .find((i) => pathname === i.to || pathname.startsWith(i.to + '/'))
-  return match?.label ?? nav[0].label
+  return match?.labelKey ?? nav[0].labelKey
 }

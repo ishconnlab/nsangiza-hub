@@ -5,8 +5,10 @@ import { cn } from '../../lib/utils'
 import { barNav, sheetNav } from './navConfig'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { MoreSheetList } from './MoreSheetList'
+import { useI18n } from '../../i18n/LanguageProvider'
 
 export function BottomTaskbar({ role }: { role?: string | null }) {
+  const { t } = useI18n()
   const items = barNav(role)
   const secondary = sheetNav(role)
   const { pathname } = useLocation()
@@ -50,7 +52,7 @@ export function BottomTaskbar({ role }: { role?: string | null }) {
                     key={isActive ? 'on' : 'off'}
                     className={cn('relative h-5 w-5', isActive && 'anim-pop')}
                   />
-                  <span className="relative leading-none">{item.shortLabel ?? item.label}</span>
+                  <span className="relative leading-none">{t(item.shortKey ?? item.labelKey)}</span>
                 </>
               )}
             </NavLink>
@@ -74,7 +76,7 @@ export function BottomTaskbar({ role }: { role?: string | null }) {
               )}
             />
             <MoreHorizontal className={cn('relative h-5 w-5', moreActive && 'anim-pop')} />
-            <span className="relative leading-none">More</span>
+            <span className="relative leading-none">{t('common.more')}</span>
           </button>
         </div>
       </nav>
@@ -82,7 +84,7 @@ export function BottomTaskbar({ role }: { role?: string | null }) {
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>More</SheetTitle>
+            <SheetTitle>{t('common.more')}</SheetTitle>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             <MoreSheetList items={secondary} onNavigate={() => setMoreOpen(false)} />

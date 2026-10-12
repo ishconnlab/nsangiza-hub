@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label'
 import { Checkbox } from '../components/ui/checkbox'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../hooks/auth-context'
+import { useI18n } from '../i18n/LanguageProvider'
 
 function ErrorBanner({ message }: { message: string }) {
   return (
@@ -20,6 +21,7 @@ function ErrorBanner({ message }: { message: string }) {
 
 export function Login() {
   const { login } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -47,9 +49,9 @@ export function Login() {
       } else {
         navigate('/app')
       }
-      toast.success('Welcome back.')
+      toast.success(t('auth.welcomeBackToast'))
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Unable to sign in right now.'
+      const message = err instanceof ApiError ? err.message : t('auth.signInError')
       setError(message)
       toast.error(message)
     } finally {
@@ -59,26 +61,26 @@ export function Login() {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-hub-primary">Welcome back</p>
-      <h1 className="mt-2 text-2xl font-bold text-hub-text">Sign in</h1>
-      <p className="mt-1 text-sm text-hub-muted">Continue to your private space on Nsangiza Hub.</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-hub-primary">{t('auth.welcomeBack')}</p>
+      <h1 className="mt-2 text-2xl font-bold text-hub-text">{t('auth.signIn')}</h1>
+      <p className="mt-1 text-sm text-hub-muted">{t('auth.signInSub')}</p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {error ? <ErrorBanner message={error} /> : null}
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('auth.email')}</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input id="email" type="email" required autoComplete="email" className="pl-9" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.rw" />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t('auth.password')}</Label>
           <div className="relative">
-            <Input id="password" required type={showPw ? 'text' : 'password'} autoComplete="current-password" className="pl-3 pr-10" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
+            <Input id="password" required type={showPw ? 'text' : 'password'} autoComplete="current-password" className="pl-3 pr-10" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.password')} />
             <button
               type="button"
               onClick={() => setShowPw((v) => !v)}
-              aria-label={showPw ? 'Hide password' : 'Show password'}
+              aria-label={showPw ? t('auth.hidePassword') : t('auth.showPassword')}
               className="focus-ring absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-hub-primary"
             >
               {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -86,13 +88,13 @@ export function Login() {
           </div>
         </div>
         <Button type="submit" className="w-full" disabled={submitting}>
-          {submitting ? 'Signing in…' : 'Sign in'}
+          {submitting ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
       </form>
       <p className="mt-5 text-center text-sm text-hub-muted">
-        New to Nsangiza Hub?{' '}
+        {t('auth.newHere')}{' '}
         <Link to="/register" state={location.state} className="font-medium text-hub-primary hover:underline">
-          Create an account
+          {t('auth.createAccount')}
         </Link>
       </p>
     </div>
@@ -101,6 +103,7 @@ export function Login() {
 
 export function Register() {
   const { register } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const [displayName, setDisplayName] = useState('')
@@ -115,8 +118,8 @@ export function Register() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!consent) {
-      setError('Please accept the consent statement to continue.')
-      toast.error('Please accept the consent statement to continue.')
+      setError(t('auth.consentRequired'))
+      toast.error(t('auth.consentRequired'))
       return
     }
     setError(null)
@@ -128,9 +131,9 @@ export function Register() {
       if (target) navigate(target)
       else if (user.role === 'PROFESSIONAL') navigate('/professional/profile')
       else navigate('/onboarding')
-      toast.success('Your account is ready.')
+      toast.success(t('auth.accountReady'))
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Unable to create your account right now.'
+      const message = err instanceof ApiError ? err.message : t('auth.createError')
       setError(message)
       toast.error(message)
     } finally {
@@ -140,13 +143,13 @@ export function Register() {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-hub-primary">Create your account</p>
-      <h1 className="mt-2 text-2xl font-bold text-hub-text">Get started</h1>
-      <p className="mt-1 text-sm text-hub-muted">Your information is private and never shared without your consent.</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-hub-primary">{t('auth.createTitle')}</p>
+      <h1 className="mt-2 text-2xl font-bold text-hub-text">{t('auth.getStarted')}</h1>
+      <p className="mt-1 text-sm text-hub-muted">{t('auth.createSub')}</p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {error ? <ErrorBanner message={error} /> : null}
         <div className="space-y-1.5">
-          <Label>I am here to</Label>
+          <Label>{t('auth.iamHere')}</Label>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -155,7 +158,7 @@ export function Register() {
               className={role === 'USER' ? 'flex items-center gap-2 rounded-xl border-2 border-hub-primary bg-hub-primary-light px-3 py-2.5 text-sm font-medium text-hub-primary' : 'flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-hub-muted transition-colors hover:border-slate-300'}
             >
               <Smile className="h-4 w-4" />
-              Get support
+              {t('auth.getSupport')}
             </button>
             <button
               type="button"
@@ -164,31 +167,31 @@ export function Register() {
               className={role === 'PROFESSIONAL' ? 'flex items-center gap-2 rounded-xl border-2 border-hub-primary bg-hub-primary-light px-3 py-2.5 text-sm font-medium text-hub-primary' : 'flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-hub-muted transition-colors hover:border-slate-300'}
             >
               <ShieldPlus className="h-4 w-4" />
-              Offer support
+              {t('auth.offerSupport')}
             </button>
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="displayName">Your name</Label>
+          <Label htmlFor="displayName">{t('auth.yourName')}</Label>
           <div className="relative">
-            <Input id="displayName" required minLength={2} className="pl-3" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Uwimana Alice" autoComplete="name" />
+            <Input id="displayName" required minLength={2} className="pl-3" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t('auth.namePlaceholder')} autoComplete="name" />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="reg-email">Email</Label>
+          <Label htmlFor="reg-email">{t('auth.email')}</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input id="reg-email" type="email" required autoComplete="email" className="pl-9" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.rw" />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="reg-password">Password</Label>
+          <Label htmlFor="reg-password">{t('auth.password')}</Label>
           <div className="relative">
-            <Input id="reg-password" type={showPw ? 'text' : 'password'} required minLength={8} autoComplete="new-password" className="pl-3 pr-10" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+            <Input id="reg-password" type={showPw ? 'text' : 'password'} required minLength={8} autoComplete="new-password" className="pl-3 pr-10" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.passwordPlaceholder')} />
             <button
               type="button"
               onClick={() => setShowPw((v) => !v)}
-              aria-label={showPw ? 'Hide password' : 'Show password'}
+              aria-label={showPw ? t('auth.hidePassword') : t('auth.showPassword')}
               className="focus-ring absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-hub-primary"
             >
               {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -198,21 +201,21 @@ export function Register() {
         <label className="flex items-start gap-2.5 text-sm text-hub-muted">
           <Checkbox className="mt-0.5" checked={consent} onCheckedChange={(v) => setConsent(v === true)} />
           <span>
-            I understand how Nsangiza Hub stores my details, and I consent to the privacy terms described in the{' '}
+            {t('auth.consent')}{' '}
             <Link to="/privacy" className="underline hover:text-hub-primary" target="_blank">
-              privacy policy
+              {t('auth.privacyPolicy')}
             </Link>
             .
           </span>
         </label>
         <Button type="submit" className="w-full" disabled={submitting}>
-          {submitting ? 'Creating your account…' : 'Create my account'}
+          {submitting ? t('auth.creating') : t('auth.createMyAccount')}
         </Button>
       </form>
       <p className="mt-5 text-center text-sm text-hub-muted">
-        Already have an account?{' '}
+        {t('auth.haveAccount')}{' '}
         <Link to="/login" state={location.state} className="font-medium text-hub-primary hover:underline">
-          Sign in
+          {t('auth.signInLink')}
         </Link>
       </p>
     </div>

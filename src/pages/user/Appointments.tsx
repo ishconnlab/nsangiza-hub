@@ -12,6 +12,7 @@ import { EmptyState, Loading, PageHeader } from '../../components/PageHeader'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog'
 import { formatDate, formatTime } from '../../lib/format'
 import { ApiError } from '../../lib/api'
+import { useI18n } from '../../i18n/LanguageProvider'
 import { useAppointments, useCancelAppointment, useUpdateAppointment } from '../../services/appointments'
 import type { Appointment } from '../../types'
 
@@ -24,6 +25,7 @@ function localDateKey(d: Date) {
 }
 
 function AppointmentCard({ appointment }: { appointment: Appointment }) {
+  const { t } = useI18n()
   const cancelMutation = useCancelAppointment()
   const updateMutation = useUpdateAppointment()
   const [detailOpen, setDetailOpen] = useState(false)
@@ -44,9 +46,9 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
       await cancelMutation.mutateAsync(appointment._id)
       setCancelOpen(false)
       setDetailOpen(false)
-      toast.success('Appointment cancelled.')
+      toast.success(t('appt.cancelled'))
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not cancel.')
+      toast.error(err instanceof ApiError ? err.message : t('appt.cancelError'))
     } finally {
       setBusy(null)
     }
@@ -59,9 +61,9 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
       await updateMutation.mutateAsync({ id: appointment._id, body: { date: new Date(newDateTime).toISOString() } })
       setRescheduleOpen(false)
       setDetailOpen(false)
-      toast.success('Session rescheduled. Your professional has been notified.')
+      toast.success(t('appt.rescheduled'))
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not reschedule.')
+      toast.error(err instanceof ApiError ? err.message : t('appt.rescheduleError'))
     } finally {
       setBusy(null)
     }
@@ -73,7 +75,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
         <Link to="/app/messages">
           <Button size="sm" className="inline-flex items-center gap-1.5">
             <MessageSquare className="h-4 w-4" />
-            Open secure chat
+            {t('appt.joinChat')}
           </Button>
         </Link>
       )
@@ -82,7 +84,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
       return (
         <p className="inline-flex items-center gap-1.5 text-sm text-hub-muted">
           <MapPin className="h-4 w-4 text-hub-primary" />
-          Your professional will share the meeting location.
+          {t('appt.joinLocation')}
         </p>
       )
     }
@@ -91,10 +93,10 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
         <Link to="/app/messages">
           <Button size="sm" className="inline-flex items-center gap-1.5">
             <Video className="h-4 w-4" />
-            Open session
+            {t('appt.openSession')}
           </Button>
         </Link>
-        <p className="text-xs text-hub-muted">Your professional opens the call and sends the link in your messages.</p>
+        <p className="text-xs text-hub-muted">{t('appt.linkNote')}</p>
       </div>
     )
   }
@@ -112,25 +114,25 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
               {appointment.type} · {formatDate(appointment.date)} at {formatTime(appointment.date)}
               {appointment.durationMin ? ` · ${appointment.durationMin} min` : ''}
             </p>
-            {appointment.notes ? <p className="mt-2 line-clamp-2 text-sm text-hub-muted">Note: {appointment.notes}</p> : null}
+            {appointment.notes ? <p className="mt-2 line-clamp-2 text-sm text-hub-muted">{t('appt.note', { note: appointment.notes })}</p> : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {joinable ? (
               <Button size="sm" className="inline-flex items-center gap-1.5" onClick={() => setDetailOpen(true)}>
                 <Video className="h-4 w-4" />
-                Join session
+                {t('appt.joinSession')}
               </Button>
             ) : null}
             <Button size="sm" variant="outline" onClick={() => setDetailOpen(true)}>
-              Details
+              {t('appt.details')}
             </Button>
             {upcoming && !isPast ? (
               <>
                 <Button size="sm" variant="ghost" onClick={() => setRescheduleOpen(true)}>
-                  Reschedule
+                  {t('appt.reschedule')}
                 </Button>
                 <Button size="sm" variant="ghost" className="text-hub-danger hover:text-hub-danger" onClick={() => setCancelOpen(true)} disabled={busy === 'cancel'}>
-                  {busy === 'cancel' ? 'Cancelling…' : 'Cancel'}
+                  {busy === 'cancel' ? t('appt.cancelling') : t('appt.cancel')}
                 </Button>
               </>
             ) : null}
@@ -141,7 +143,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Session with {appointment.professionalName}</DialogTitle>
+            <DialogTitle>{t('appt.sessionWith', { name: appointment.professionalName })}</DialogTitle>
             <DialogDescription>
               {formatDate(appointment.date)} at {formatTime(appointment.date)}
               {appointment.durationMin ? ` · ${appointment.durationMin} min` : ''}
@@ -149,20 +151,20 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
           </DialogHeader>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2.5">
-              <span className="text-hub-muted">Status</span>
+              <span className="text-hub-muted">{t('appt.status')}</span>
               <StatusBadge status={appointment.status} />
             </div>
             <div className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2.5">
-              <span className="text-hub-muted">Type</span>
+              <span className="text-hub-muted">{t('appt.type')}</span>
               <span className="font-medium text-hub-text">{appointment.type}</span>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2.5">
-              <span className="text-hub-muted">Session ID</span>
+              <span className="text-hub-muted">{t('appt.sessionId')}</span>
               <span className="font-mono text-xs text-hub-muted">{appointment._id.slice(-8).toUpperCase()}</span>
             </div>
             {appointment.notes ? (
               <div className="rounded-xl border border-slate-100 px-3 py-2.5">
-                <p className="text-hub-muted">Your note</p>
+                <p className="text-hub-muted">{t('appt.yourNote')}</p>
                 <p className="mt-1 text-hub-text">{appointment.notes}</p>
               </div>
             ) : null}
@@ -170,21 +172,21 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
             {upcoming && !isPast ? (
               <div className="flex items-center gap-2 text-xs text-hub-muted">
                 <Clock3 className="h-3.5 w-3.5 text-hub-primary" />
-                Need a different time? Reschedule or cancel — your professional is notified either way.
+                {t('appt.help')}
               </div>
             ) : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              Close
+              {t('common.close')}
             </Button>
             {upcoming && !isPast ? (
               <>
                 <Button variant="ghost" onClick={() => { setDetailOpen(false); setRescheduleOpen(true) }}>
-                  Reschedule
+                  {t('appt.reschedule')}
                 </Button>
                 <Button variant="ghost" className="text-hub-danger" onClick={() => { setDetailOpen(false); setCancelOpen(true) }}>
-                  Cancel session
+                  {t('appt.cancelAppointment')}
                 </Button>
               </>
             ) : null}
@@ -195,11 +197,11 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
       <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reschedule this session?</DialogTitle>
-            <DialogDescription>Pick a new date and time. Your professional will be notified.</DialogDescription>
+            <DialogTitle>{t('appt.rescheduleTitle')}</DialogTitle>
+            <DialogDescription>{t('appt.rescheduleBody')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label htmlFor={`reschedule-${appointment._id}`}>New date and time</Label>
+            <Label htmlFor={`reschedule-${appointment._id}`}>{t('appt.newDateTime')}</Label>
             <Input
               id={`reschedule-${appointment._id}`}
               type="datetime-local"
@@ -210,10 +212,10 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRescheduleOpen(false)}>
-              Keep current time
+              {t('appt.keepCurrent')}
             </Button>
             <Button onClick={() => void doReschedule()} disabled={!newDateTime || busy === 'reschedule'}>
-              {busy === 'reschedule' ? 'Rescheduling…' : 'Reschedule'}
+              {busy === 'reschedule' ? t('appt.rescheduling') : t('appt.reschedule')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -222,15 +224,15 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel this appointment?</DialogTitle>
-            <DialogDescription>Your professional will be notified. You can book again anytime.</DialogDescription>
+            <DialogTitle>{t('appt.cancelTitle')}</DialogTitle>
+            <DialogDescription>{t('appt.cancelBody')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelOpen(false)}>
-              Keep it
+              {t('common.keep')}
             </Button>
             <Button variant="ghost" className="text-hub-danger" onClick={() => void doCancel()} disabled={busy === 'cancel'}>
-              {busy === 'cancel' ? 'Cancelling…' : 'Cancel appointment'}
+              {busy === 'cancel' ? t('appt.cancelling') : t('appt.cancelAppointment')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -240,6 +242,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
 }
 
 export default function Appointments() {
+  const { t } = useI18n()
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming')
   const { data, isLoading } = useAppointments({ pageSize: 50 })
 
@@ -250,13 +253,13 @@ export default function Appointments() {
   return (
     <div>
       <PageHeader
-        title="Appointments"
-        description="Your sessions with verified professionals — request, confirm and join."
+        title={t('appt.title')}
+        description={t('appt.desc')}
         actions={
           <Link to="/professionals">
             <Button className="inline-flex items-center gap-1.5">
               <CalendarDays className="h-4 w-4" />
-              Book new
+              {t('appt.bookNew')}
             </Button>
           </Link>
         }
@@ -264,19 +267,19 @@ export default function Appointments() {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'upcoming' | 'past')}>
         <TabsList>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="past">Past</TabsTrigger>
+          <TabsTrigger value="upcoming">{t('appt.upcoming')}</TabsTrigger>
+          <TabsTrigger value="past">{t('appt.past')}</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming">
           {isLoading ? (
-            <Loading label="Loading appointments…" />
+            <Loading label={t('appt.loading')} />
           ) : upcoming.length === 0 ? (
             <EmptyState
-              title="No upcoming appointments"
-              description="When you're ready, find a professional and request your first session."
+              title={t('appt.empty.upcoming')}
+              description={t('appt.empty.upcomingBody')}
               action={
                 <Link to="/professionals">
-                  <Button>Find support</Button>
+                  <Button>{t('appt.findSupport')}</Button>
                 </Link>
               }
             />
@@ -286,9 +289,9 @@ export default function Appointments() {
         </TabsContent>
         <TabsContent value="past">
           {isLoading ? (
-            <Loading label="Loading history…" />
+            <Loading label={t('appt.loadingHistory')} />
           ) : past.length === 0 ? (
-            <EmptyState title="No past sessions yet" />
+            <EmptyState title={t('appt.empty.past')} />
           ) : (
             <div className="space-y-3">{past.map((a) => <AppointmentCard key={a._id} appointment={a} />)}</div>
           )}

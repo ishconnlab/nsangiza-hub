@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ShieldCheck } from 'lucide-react'
@@ -13,11 +14,25 @@ import { SafetyNotice } from '../../components/SafetyNotice'
 import { PageHeader } from '../../components/PageHeader'
 import { ApiError } from '../../lib/api'
 import { useAuth } from '../../hooks/auth-context'
+import { useI18n } from '../../i18n/LanguageProvider'
 import { useProfileUpdate } from '../../services/users'
 import { CITIES, LANGUAGES, COMMUNICATION_PREFERENCES } from '../../lib/constants'
 
+const FOOTER_LINKS = [
+  { to: '/professionals', key: 'footer.findSupport' },
+  { to: '/how-it-works', key: 'footer.howItWorks' },
+  { to: '/resources', key: 'footer.wellbeing' },
+  { to: '/help/emergency', key: 'footer.emergency' },
+  { to: '/join', key: 'footer.forProfessionals' },
+  { to: '/safety', key: 'footer.safety' },
+  { to: '/privacy', key: 'footer.privacy' },
+  { to: '/terms', key: 'footer.terms' },
+  { to: '/help/contact', key: 'footer.contact' },
+] as const
+
 export default function ProfileSettings() {
   const { user, logout } = useAuth()
+  const { t } = useI18n()
   const queryClient = useQueryClient()
   const updateMutation = useProfileUpdate()
 
@@ -190,6 +205,28 @@ export default function ProfileSettings() {
               <Button variant="ghost" className="text-hub-danger hover:text-hub-danger" onClick={() => void logout()}>
                 Sign out
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Help & information</CardTitle>
+              <CardDescription>Explore Nsangiza Hub, find support and review our policies.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                {FOOTER_LINKS.map((item) => (
+                  <li key={item.to}>
+                    <Link to={item.to} className="text-hub-muted transition-colors hover:text-hub-primary">
+                      {t(item.key)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Separator />
+              <p className="text-xs text-hub-muted">
+                © {new Date().getFullYear()} {t('footer.crisis')}
+              </p>
             </CardContent>
           </Card>
         </div>

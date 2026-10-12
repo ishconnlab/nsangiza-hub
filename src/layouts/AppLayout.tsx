@@ -5,17 +5,20 @@ import { Badge } from '../components/ui/badge'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import Brand from '../components/Brand'
 import { Loading } from '../components/PageHeader'
+import { ReadAloud } from '../components/ReadAloud'
 import { BottomTaskbar } from '../components/nav/BottomTaskbar'
 import { NotificationManager } from '../components/notifications/NotificationManager'
-import { navFor, pageTitleFor } from '../components/nav/navConfig'
+import { navFor, pageTitleKeyFor } from '../components/nav/navConfig'
 import { initials } from '../lib/format'
 import { cn } from '../lib/utils'
 import { useAuth } from '../hooks/auth-context'
+import { useI18n } from '../i18n/LanguageProvider'
 import { dashboardPathFor } from '../router/guards'
 import { useNotifications } from '../services/notifications'
 
 export default function AppLayout() {
   const { user, logout } = useAuth()
+  const { t } = useI18n()
   const { data: notifications } = useNotifications()
   const location = useLocation()
   const navigate = useNavigate()
@@ -24,10 +27,11 @@ export default function AppLayout() {
 
   const prefix = dashboardPathFor(user?.role)
   const nav = navFor(user?.role)
-  const title = pageTitleFor(location.pathname, user?.role)
+  const title = t(pageTitleKeyFor(location.pathname, user?.role))
   const activeItem = nav.find((i) => location.pathname === i.to || location.pathname.startsWith(i.to + '/'))
   const isNested = Boolean(activeItem && location.pathname !== activeItem.to)
   const reduceMotion = user?.privacySettings?.reduceMotion === true
+  const simpleView = user?.privacySettings?.simpleView === true
 
   const scrollMemory = useRef(new Map<string, number>())
   const currentPath = useRef(location.pathname)
@@ -66,17 +70,17 @@ export default function AppLayout() {
   const unread = notifications?.data.unreadCount ?? 0
   const roleLabel =
     user?.role === 'PROFESSIONAL'
-      ? 'Professional workspace'
+      ? t('role.professionalWorkspace')
       : user?.role && ['ADMIN', 'SUPER_ADMIN', 'MODERATOR', 'SUPERVISOR'].includes(user.role)
-        ? 'Management console'
-        : 'Your space'
+        ? t('role.managementConsole')
+        : t('role.yourSpace')
 
   const sidebar = (
     <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
       <div className="flex h-16 items-center border-b border-slate-100 px-5">
         <Brand to={prefix} />
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Application">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label={t('common.applicationNav')}>
         {nav.map((item) => (
           <NavLink
             key={item.to}
@@ -90,7 +94,7 @@ export default function AppLayout() {
             }
           >
             <item.icon className="h-4.5 w-4.5" />
-            {item.label}
+            {t(item.labelKey)}
             {item.to === `${prefix}/notifications` && unread > 0 ? <Badge variant="danger">{unread}</Badge> : null}
           </NavLink>
         ))}
@@ -101,14 +105,14 @@ export default function AppLayout() {
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-hub-muted transition-colors hover:bg-slate-50 hover:text-hub-danger"
         >
           <LogOut className="h-4.5 w-4.5" />
-          {confirmLogout ? 'Confirm sign out?' : 'Sign out'}
+          {confirmLogout ? t('common.confirmSignOut') : t('common.signOut')}
         </button>
         {confirmLogout ? (
           <button
             onClick={() => void handleLogout()}
             className="mt-1 w-full rounded-xl bg-hub-danger px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
           >
-            Yes, sign me out
+            {t('common.yesSignOut')}
           </button>
         ) : null}
       </div>
@@ -119,6 +123,7 @@ export default function AppLayout() {
     <div
       className="flex min-h-screen bg-hub-background"
       data-reduce-motion={reduceMotion ? '' : undefined}
+      data-simple-view={simpleView ? '' : undefined}
     >
       <div className="sticky top-0 hidden h-screen lg:block">{sidebar}</div>
 
@@ -129,7 +134,7 @@ export default function AppLayout() {
               {isNested ? (
                 <button
                   onClick={() => navigate(-1)}
-                  aria-label="Go back"
+                  aria-label={t('common.back')}
                   className="-ml-1.5 rounded-full p-2 text-hub-muted transition-colors hover:bg-slate-100 active:scale-95 lg:hidden"
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -141,10 +146,11 @@ export default function AppLayout() {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <ReadAloud label={t('common.readAloud')} />
               <Link
                 to={`${prefix}/notifications`}
                 className="relative rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 active:scale-95"
-                aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+                aria-label={unread > 0 ? t('common.notificationsUnread', { count: unread }) : t('common.notifications')}
               >
                 <Bell className="h-5 w-5" />
                 {unread > 0 ? (
@@ -155,7 +161,7 @@ export default function AppLayout() {
               </Link>
               <Link
                 to={user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'MODERATOR' || user?.role === 'SUPERVISOR' ? prefix : `${prefix}/profile`}
-                aria-label="Profile and settings"
+                aria-label={t('common.profileSettings')}
                 className="active:scale-95"
               >
                 <Avatar className="h-9 w-9">
@@ -170,7 +176,7 @@ export default function AppLayout() {
           </div>
           {!online ? (
             <p role="status" className="bg-amber-500 px-4 py-1 text-center text-xs font-medium text-white">
-              You're offline — changes will sync when you reconnect.
+              {t('app.offline')}
             </p>
           ) : null}
         </header>

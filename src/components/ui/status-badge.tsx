@@ -1,24 +1,34 @@
 import { Badge, type BadgeProps } from './badge'
+import { useI18n } from '../../i18n/LanguageProvider'
 
 type BadgeVariant = NonNullable<BadgeProps['variant']>
 
-const STATUS_LOOKUP: Record<string, { label: string; variant: BadgeVariant }> = {
-  requested: { label: 'Requested', variant: 'warning' },
-  confirmed: { label: 'Confirmed', variant: 'success' },
-  rescheduled: { label: 'Rescheduled', variant: 'info' },
-  completed: { label: 'Completed', variant: 'secondary' },
-  cancelled: { label: 'Cancelled', variant: 'danger' },
-  'no-show': { label: 'No show', variant: 'danger' },
-}
-
-function titleCase(value: string) {
-  return value
-    .split(/[-_\s]+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+  requested: 'warning',
+  confirmed: 'success',
+  rescheduled: 'info',
+  completed: 'secondary',
+  cancelled: 'danger',
+  declined: 'danger',
+  'no-show': 'danger',
+  overdue: 'danger',
+  pending: 'warning',
+  active: 'info',
+  resolved: 'secondary',
+  hidden: 'secondary',
+  dismissed: 'secondary',
+  review: 'warning',
+  verified: 'success',
+  rejected: 'danger',
+  published: 'success',
+  draft: 'secondary',
 }
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
-  const known = STATUS_LOOKUP[status]
-  return <Badge variant={known?.variant ?? 'secondary'} className={className}>{known?.label ?? titleCase(status)}</Badge>
+  const { tl } = useI18n()
+  return (
+    <Badge variant={STATUS_VARIANT[status] ?? 'secondary'} className={className}>
+      {tl(`status.${status}`)}
+    </Badge>
+  )
 }

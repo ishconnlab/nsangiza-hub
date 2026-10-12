@@ -1,13 +1,18 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { dictionaries, englishDictionary, LANGUAGES, type Lang, type TranslationKey } from './translations'
+import { setCurrentLocale } from './locale'
 
 const STORAGE_KEY = 'nsangiza_lang'
 const SUPPORTED = LANGUAGES.map((l) => l.code)
 
+type TranslateParams = Record<string, string | number>
+
 interface LanguageContextValue {
   lang: Lang
   setLang: (lang: Lang) => void
-  t: (key: TranslationKey) => string
+  t: (key: TranslationKey, params?: TranslateParams) => string
+  /** dynamic lookup for runtime keys (e.g. API statuses); falls back to the key itself */
+  tl: (key: string, params?: TranslateParams) => string
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
@@ -26,6 +31,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang
+    setCurrentLocale(lang)
   }, [lang])
 
   const setLang = useCallback((next: Lang) => {
@@ -38,11 +44,28 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const t = useCallback(
-    (key: TranslationKey) => dictionaries[lang][key] ?? englishDictionary[key],
+    (key: TranslationKey, params?: TranslateParams) => {
+      const template = dictionaries[lang][key] ?? englishDictionary[key] ?? key
+      if (!params) return template
+      return template.replace(/\{(\w+)\}/g, (match, token: string) =>
+        params[token] !== undefined ? String(params[token]) : match,
+      )
+    },
     [lang],
   )
 
-  const value = useMemo<LanguageContextValue>(() => ({ lang, setLang, t }), [lang, setLang, t])
+  const tl = useCallback(
+    (key: string, params?: TranslateParams) => {
+      const template = dictionaries[lang][key as TranslationKey] ?? englishDictionary[key as TranslationKey] ?? key
+      if (!params) return template
+      return template.replace(/\{(\w+)\}/g, (match, token: string) =>
+        params[token] !== undefined ? String(params[token]) : match,
+      )
+    },
+    [lang],
+  )
+
+  const value = useMemo<LanguageContextValue>(() => ({ lang, setLang, t, tl }), [lang, setLang, t, tl])
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }
