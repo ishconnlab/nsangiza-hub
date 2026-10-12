@@ -43,7 +43,16 @@ export default function ProfileSettings() {
   const [ageRange, setAgeRange] = useState('')
   const [communication, setCommunication] = useState('')
   const [notif, setNotif] = useState({ appointmentReminders: true, messages: true, followUps: true, community: false, system: true })
-  const [privacy, setPrivacy] = useState({ reduceMotion: false, simpleView: false, allowAnalytics: true })
+  const [privacy, setPrivacy] = useState({
+    reduceMotion: false,
+    simpleView: false,
+    allowAnalytics: true,
+    largeText: false,
+    highContrast: false,
+    dyslexiaFriendly: false,
+    autoReadAloud: false,
+    enableReadAloud: true,
+  })
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -161,32 +170,48 @@ export default function ProfileSettings() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Privacy settings</CardTitle>
-              <CardDescription>How the app looks and what we learn from your usage.</CardDescription>
+              <CardTitle>Accessibility & support for disabilities</CardTitle>
+              <CardDescription>Adapt the app to your needs (larger text, high contrast, dyslexia-friendly text, read-aloud).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-hub-text">Reduce motion</p>
-                  <p className="text-xs text-hub-muted">Fewer moving elements, gentler experience.</p>
+                  <p className="text-sm text-hub-text">Large text</p>
+                  <p className="text-xs text-hub-muted">Slightly bigger text for easier reading.</p>
                 </div>
-                <Switch checked={privacy.reduceMotion} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, reduceMotion: v }))} />
+                <Switch checked={privacy.largeText} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, largeText: v }))} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-hub-text">Simple view</p>
-                  <p className="text-xs text-hub-muted">Larger text, less visual clutter.</p>
+                  <p className="text-sm text-hub-text">High contrast</p>
+                  <p className="text-xs text-hub-muted">Bolder colours for better visibility.</p>
                 </div>
-                <Switch checked={privacy.simpleView} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, simpleView: v }))} />
+                <Switch checked={privacy.highContrast} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, highContrast: v }))} />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-hub-text">Allow anonymised analytics</p>
-                  <p className="text-xs text-hub-muted">Helps us improve the service without identifying you.</p>
+                  <p className="text-sm text-hub-text">Dyslexia-friendly font (coming to app-wide)</p>
+                  <p className="text-xs text-hub-muted">Uses a clearer font where available.</p>
                 </div>
-                <Switch checked={privacy.allowAnalytics} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, allowAnalytics: v }))} />
+                <Switch checked={privacy.dyslexiaFriendly} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, dyslexiaFriendly: v }))} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-hub-text">Enable Read Aloud</p>
+                  <p className="text-xs text-hub-muted">Show the “Read this page aloud” button.</p>
+                </div>
+                <Switch checked={privacy.enableReadAloud} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, enableReadAloud: v }))} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-hub-text">Auto-read aloud for simple view</p>
+                  <p className="text-xs text-hub-muted">Helpful for low-literacy or when needed.</p>
+                </div>
+                <Switch checked={privacy.autoReadAloud} onCheckedChange={(v) => setPrivacy((s) => ({ ...s, autoReadAloud: v }))} />
               </div>
             </CardContent>
           </Card>

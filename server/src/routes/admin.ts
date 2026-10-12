@@ -402,3 +402,19 @@ router.get(
 )
 
 export default router
+router.get(/system/status, requireAdminOnly, asyncHandler(async (_req: AReq, res) => {
+  const stats = await Promise.all([
+    User.estimatedDocumentCount(),
+    Professional.estimatedDocumentCount(),
+    Appointment.estimatedDocumentCount(),
+    Resource.estimatedDocumentCount(),
+  ])
+  res.json(ok({
+    users: stats[0],
+    professionals: stats[1],
+    appointments: stats[2],
+    resources: stats[3],
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+  }))
+}))

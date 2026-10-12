@@ -50,6 +50,11 @@ export interface PrivacySettings {
   reduceMotion: boolean
   simpleView: boolean
   allowAnalytics: boolean
+  largeText?: boolean
+  highContrast?: boolean
+  dyslexiaFriendly?: boolean
+  autoReadAloud?: boolean
+  enableReadAloud?: boolean
 }
 
 export interface User {

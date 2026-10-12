@@ -176,3 +176,10 @@ export function useAuditLogs() {
     queryFn: () => get<{ logs: Record<string, unknown>[]; total: number }>('/admin/audit-logs', { pageSize: 50 }),
   })
 }
+export function useSystemStatus() {
+  return useQuery({
+    queryKey: ['admin', 'system'],
+    queryFn: () => get<{ uptime: number; memory: Record<string, number>; users: number; professionals: number; appointments: number; resources: number }>('/admin/system/status'),
+    refetchInterval: 30_000,
+  })
+}

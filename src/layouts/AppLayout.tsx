@@ -32,6 +32,9 @@ export default function AppLayout() {
   const isNested = Boolean(activeItem && location.pathname !== activeItem.to)
   const reduceMotion = user?.privacySettings?.reduceMotion === true
   const simpleView = user?.privacySettings?.simpleView === true
+  const largeText = user?.privacySettings?.largeText === true
+  const highContrast = user?.privacySettings?.highContrast === true
+  const dyslexiaFriendly = user?.privacySettings?.dyslexiaFriendly === true
 
   const scrollMemory = useRef(new Map<string, number>())
   const currentPath = useRef(location.pathname)
@@ -124,6 +127,9 @@ export default function AppLayout() {
       className="flex min-h-screen bg-hub-background"
       data-reduce-motion={reduceMotion ? '' : undefined}
       data-simple-view={simpleView ? '' : undefined}
+      data-large-text={largeText ? '' : undefined}
+      data-high-contrast={highContrast ? '' : undefined}
+      data-dyslexia-friendly={dyslexiaFriendly ? '' : undefined}
     >
       <div className="sticky top-0 hidden h-screen lg:block">{sidebar}</div>
 

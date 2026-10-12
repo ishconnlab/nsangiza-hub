@@ -31,6 +31,11 @@ const profileSchema = z.object({
       reduceMotion: z.boolean().optional(),
       simpleView: z.boolean().optional(),
       allowAnalytics: z.boolean().optional(),
+      largeText: z.boolean().optional(),
+      highContrast: z.boolean().optional(),
+      dyslexiaFriendly: z.boolean().optional(),
+      autoReadAloud: z.boolean().optional(),
+      enableReadAloud: z.boolean().optional(),
     })
     .optional(),
 })
@@ -62,6 +67,11 @@ router.patch(
       user.privacySettings.reduceMotion = s.reduceMotion ?? user.privacySettings.reduceMotion
       user.privacySettings.simpleView = s.simpleView ?? user.privacySettings.simpleView
       user.privacySettings.allowAnalytics = s.allowAnalytics ?? user.privacySettings.allowAnalytics
+      user.privacySettings.largeText = s.largeText ?? user.privacySettings.largeText
+      user.privacySettings.highContrast = s.highContrast ?? user.privacySettings.highContrast
+      user.privacySettings.dyslexiaFriendly = s.dyslexiaFriendly ?? user.privacySettings.dyslexiaFriendly
+      user.privacySettings.autoReadAloud = s.autoReadAloud ?? user.privacySettings.autoReadAloud
+      user.privacySettings.enableReadAloud = s.enableReadAloud ?? user.privacySettings.enableReadAloud
     }
 
     await user.save()
