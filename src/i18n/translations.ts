@@ -402,6 +402,17 @@ const en = {
   'auth.consentRequired': 'Please accept the consent statement to continue.',
   'auth.createError': 'Unable to create your account right now.',
   'auth.accountReady': 'Your account is ready.',
+  'install.title': 'Install Nsangiza Hub',
+  'install.body': 'Add the app to your phone for faster, one-tap access — and it works offline.',
+  'install.cta': 'Install app',
+  'install.later': 'Not now',
+  'install.gotIt': 'Got it',
+  'install.iosTitle': 'Install on your iPhone',
+  'install.iosBody': 'It only takes a few seconds to add Nsangiza Hub to your Home Screen.',
+  'install.iosStep1': 'Tap the Share button in your browser.',
+  'install.iosStep2': 'Choose “Add to Home Screen”, then tap Add.',
+  'install.done': 'Nsangiza Hub is installed.',
+  'install.a11y': 'Install the Nsangiza Hub app',
 } as const
 
 export type TranslationKey = keyof typeof en
@@ -785,6 +796,17 @@ const rw: Partial<Record<TranslationKey, string>> = {
   'auth.consentRequired': 'Nyamuneka wemere amasezerano yo gukomeza.',
   'auth.createError': 'Ntibashoboye gufungura konti yawe ubu.',
   'auth.accountReady': 'Konti yawe irategure.',
+  'install.title': 'Shyira Nsangiza Hub kuri telefone',
+  'install.body': 'Shyira porogaramu kuri telefone yawe kugira ngo uyikoreshe byoroshye — ikanakora nta murongo.',
+  'install.cta': 'Shyira porogaramu',
+  'install.later': 'Oya ubu',
+  'install.gotIt': 'Byumvikanye',
+  'install.iosTitle': 'Shyira kuri iPhone yawe',
+  'install.iosBody': 'Bifata amasegonda make gusa kugira ngo ushyire Nsangiza Hub kuri Home Screen.',
+  'install.iosStep1': 'Kanda buto yo Gusangiza (Share) muri mushakisha.',
+  'install.iosStep2': 'Hitamo “Add to Home Screen”, hanyuma ukande Add.',
+  'install.done': 'Nsangiza Hub yashyizweho.',
+  'install.a11y': 'Shyira porogaramu ya Nsangiza Hub',
 }
 
 const fr: Partial<Record<TranslationKey, string>> = {
@@ -1167,6 +1189,17 @@ const fr: Partial<Record<TranslationKey, string>> = {
   'auth.consentRequired': 'Veuillez accepter la déclaration de consentement pour continuer.',
   'auth.createError': 'Impossible de créer votre compte pour le moment.',
   'auth.accountReady': 'Votre compte est prêt.',
+  'install.title': 'Installer Nsangiza Hub',
+  'install.body': 'Ajoutez l’application à votre téléphone pour un accès plus rapide — elle fonctionne également hors ligne.',
+  'install.cta': 'Installer l’application',
+  'install.later': 'Plus tard',
+  'install.gotIt': 'Compris',
+  'install.iosTitle': 'Installer sur votre iPhone',
+  'install.iosBody': 'Quelques secondes suffisent pour ajouter Nsangiza Hub à votre écran d’accueil.',
+  'install.iosStep1': 'Appuyez sur le bouton Partager dans votre navigateur.',
+  'install.iosStep2': 'Sélectionnez « Ajouter à l’écran d’accueil », puis appuyez sur Ajouter.',
+  'install.done': 'Nsangiza Hub est installée.',
+  'install.a11y': 'Installer l’application Nsangiza Hub',
 }
 
 export const dictionaries: Record<Lang, Partial<Record<TranslationKey, string>>> = { en, rw, fr }
