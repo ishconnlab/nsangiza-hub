@@ -402,7 +402,7 @@ router.get(
 )
 
 export default router
-router.get(/system/status, requireAdminOnly, asyncHandler(async (_req: AReq, res) => {
+router.get('/system/status', requireAdminOnly, asyncHandler(async (_req: AReq, res) => {
   const stats = await Promise.all([
     User.estimatedDocumentCount(),
     Professional.estimatedDocumentCount(),

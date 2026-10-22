@@ -8,6 +8,7 @@ import Message from '../models/Message'
 import Professional from '../models/Professional'
 import User from '../models/User'
 import Notification from '../models/Notification'
+import Appointment from '../models/Appointment'
 
 const router = Router()
 router.use(requireAuth)
@@ -16,16 +17,70 @@ async function accessibleConversation(id: string, userId: string) {
   const conversation = await Conversation.findById(id)
   if (!conversation) throw ApiError.notFound('Conversation not found.')
   if (!conversation.participants.some((p) => String(p) === userId)) throw ApiError.forbidden()
+  if (conversation.participants.length !== 2 || !conversation.user || !conversation.professional) {
+    throw ApiError.forbidden('This conversation is not a private user?professional thread.')
+  }
+  const professional = await Professional.findById(conversation.professional).select('user').lean()
+  const clientId = String(conversation.user)
+  const professionalUserId = professional?.user ? String(professional.user) : ''
+  const ids = conversation.participants.map(String)
+  if (!professionalUserId || clientId === professionalUserId || !ids.includes(clientId) || !ids.includes(professionalUserId) || ids.includes(userId) === false) {
+    throw ApiError.forbidden('This conversation does not match its assigned participants.')
+  }
+  return conversation
+}
+
+async function openDirectConversation(clientId: string, clientName: string, professional: { _id: unknown; user?: unknown; name: string }) {
+  if (!professional.user) throw ApiError.notFound('Professional not found.')
+  const professionalUserId = String(professional.user)
+  let conversation = await Conversation.findOne({
+    professional: professional._id,
+    user: clientId,
+    participants: { $all: [clientId, professionalUserId], $size: 2 },
+  })
+  if (conversation?.status === 'blocked') throw ApiError.forbidden('This conversation is no longer open.')
+  if (!conversation) {
+    conversation = await Conversation.create({
+      participants: [clientId, professionalUserId],
+      professional: professional._id,
+      user: clientId,
+      participantNames: { [clientId]: professional.name, [professionalUserId]: clientName },
+      lastMessageAt: new Date(),
+      lastMessagePreview: 'Support conversation started',
+      unread: { [clientId]: 0, [professionalUserId]: 0 },
+    })
+  }
   return conversation
 }
 
 router.get(
   '/',
   asyncHandler(async (req: AuthedRequest, res) => {
-    const conversations = await Conversation.find({ participants: req.userId })
+    const actor = await User.findById(req.userId).select('role displayName').lean()
+    if (!actor) throw ApiError.forbidden()
+    const filter: Record<string, unknown> = { participants: req.userId, $expr: { $eq: [{ $size: '$participants' }, 2] } }
+    if (actor.role === 'USER') filter.user = req.userId
+    else if (actor.role === 'PROFESSIONAL') {
+      const profile = await Professional.findOne({ user: req.userId }).select('_id').lean()
+      if (!profile) throw ApiError.forbidden()
+      filter.professional = profile._id
+    } else throw ApiError.forbidden()
+    const candidates = await Conversation.find(filter)
       .sort({ lastMessageAt: -1 })
       .limit(100)
       .lean()
+    const professionalIds = [...new Set(candidates.map((c) => String(c.professional)).filter(Boolean))]
+    const professionalProfiles = professionalIds.length
+      ? await Professional.find({ _id: { $in: professionalIds } }).select('user').lean()
+      : []
+    const ownerByProfile = new Map(professionalProfiles.map((p) => [String(p._id), p.user ? String(p.user) : '']))
+    const conversations = candidates.filter((c) => {
+      if (!c.user || !c.professional || c.participants.length !== 2) return false
+      const clientId = String(c.user)
+      const professionalUserId = ownerByProfile.get(String(c.professional))
+      const participants = c.participants.map(String)
+      return Boolean(professionalUserId && clientId !== professionalUserId && participants.includes(clientId) && participants.includes(professionalUserId))
+    })
 
     const otherIds = new Set<string>()
     for (const c of conversations) {
@@ -70,31 +125,13 @@ router.post(
   '/',
   asyncHandler(async (req: AuthedRequest, res) => {
     const body = startSchema.parse(req.body)
+    const me = await User.findById(req.userId).lean()
+    if (me?.role !== 'USER') throw ApiError.forbidden('Only clients can start a support conversation.')
     const professional = await Professional.findById(body.professionalId).lean()
-    if (!professional || !professional.user) throw ApiError.notFound('Professional not found.')
-
-    const professionalUserId = String(professional.user)
-    let conversation = await Conversation.findOne({
-      professional: professional._id,
-      participants: { $all: [req.userId, professionalUserId] },
-    })
-
-    if (!conversation) {
-      const me = await User.findById(req.userId).lean()
-      conversation = await Conversation.create({
-        participants: [req.userId!, professionalUserId],
-        professional: professional._id,
-        user: req.userId!,
-        participantNames: {
-          [req.userId!]: professional.name,
-          [professionalUserId]: me?.displayName ?? 'Client',
-        },
-        lastMessageAt: new Date(),
-        lastMessagePreview: 'Support conversation started',
-        unread: { [req.userId!.toString()]: 0, [professionalUserId.toString()]: 0 },
-      })
+    if (!professional || !professional.user || professional.active === false || professional.verification.status !== 'Approved') {
+      throw ApiError.notFound('Professional not found.')
     }
-
+    const conversation = await openDirectConversation(String(me._id), me.displayName ?? 'Client', professional)
     res.status(201).json(ok({ conversation: { id: String(conversation._id) } }, 'Conversation ready.'))
   }),
 )
@@ -105,6 +142,30 @@ router.get(
     const conversation = await accessibleConversation(req.params.id, req.userId!)
     const messages = await Message.find({ conversation: conversation._id }).sort({ createdAt: 1 }).lean()
     res.json(ok({ conversation: { id: String(conversation._id), status: conversation.status }, messages }))
+  }),
+)
+
+router.post(
+  '/session/:appointmentId',
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const appointment = await Appointment.findById(req.params.appointmentId).lean()
+    if (!appointment) throw ApiError.notFound('Appointment not found.')
+    if (appointment.status !== 'confirmed') throw ApiError.badRequest('Only confirmed sessions can be started.')
+    const start = new Date(appointment.date).getTime()
+    const end = appointment.endDate ? new Date(appointment.endDate).getTime() : start + (appointment.durationMin ?? 45) * 60_000
+    const now = Date.now()
+    if (now < start - 10 * 60_000) throw ApiError.badRequest('This session can be started 10 minutes before its scheduled time.')
+    if (now > end + 15 * 60_000) throw ApiError.badRequest('This session has ended.')
+
+    const profile = await Professional.findById(appointment.professional).lean()
+    if (!profile?.user) throw ApiError.notFound('The assigned professional is unavailable.')
+    const clientId = String(appointment.user)
+    const professionalUserId = String(profile.user)
+    if (req.userId !== clientId && req.userId !== professionalUserId) throw ApiError.forbidden()
+    const client = await User.findById(clientId).select('displayName role').lean()
+    if (client?.role !== 'USER') throw ApiError.forbidden('This appointment is not assigned to a client account.')
+    const conversation = await openDirectConversation(clientId, client.displayName ?? 'Client', profile)
+    res.json(ok({ conversation: { id: String(conversation._id) } }, 'Session ready.'))
   }),
 )
 
@@ -156,7 +217,7 @@ router.post(
         // Keep clinical content out of the notification feed; open the
         // conversation to read it privately.
         body: 'You have a new message in your secure conversation.',
-        link: user?.role === 'USER' ? '/professional/messages' : '/app/messages',
+        link: user?.role === 'USER' ? `/professional/messages/${conversation._id}` : `/app/messages/${conversation._id}`,
       })
     }
     res.status(201).json(ok({ message }, 'Message sent.'))

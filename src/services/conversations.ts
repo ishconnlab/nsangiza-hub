@@ -35,6 +35,17 @@ export function useStartConversation() {
   })
 }
 
+
+export function useOpenAppointmentSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (appointmentId: string) => post<{ conversation: { id: string } }>(`/conversations/session/${appointmentId}`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
+    },
+  })
+}
+
 export function useSendMessage() {
   const queryClient = useQueryClient()
   return useMutation({
