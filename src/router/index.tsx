@@ -22,6 +22,8 @@ const Safety = lazy(() => import('../pages/public/StaticPages').then((m) => ({ d
 const Terms = lazy(() => import('../pages/public/StaticPages').then((m) => ({ default: m.Terms })))
 const Login = lazy(() => import('../pages/AuthPages').then((m) => ({ default: m.Login })))
 const Register = lazy(() => import('../pages/AuthPages').then((m) => ({ default: m.Register })))
+const ForgotPassword = lazy(() => import('../pages/AuthPages').then((m) => ({ default: m.ForgotPassword })))
+const ResetPassword = lazy(() => import('../pages/AuthPages').then((m) => ({ default: m.ResetPassword })))
 const Onboarding = lazy(() => import('../pages/onboarding/Onboarding'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
@@ -74,7 +76,12 @@ export const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
-      { element: <GuestRoute />, children: [{ path: '/login', element: <Login /> }, { path: '/register', element: <Register /> }] },
+      { element: <GuestRoute />, children: [
+        { path: '/login', element: <Login /> },
+        { path: '/register', element: <Register /> },
+        { path: '/forgot-password', element: <ForgotPassword /> },
+      ] },
+      { path: '/reset-password', element: <ResetPassword /> },
     ],
   },
   {

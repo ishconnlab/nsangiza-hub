@@ -5,6 +5,9 @@ const userSchema = new Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
+    passwordResetTokenHash: { type: String, select: false, default: undefined },
+    passwordResetExpiresAt: { type: Date, select: false, default: undefined },
+    authVersion: { type: Number, default: 0 },
     displayName: { type: String, required: true, trim: true, maxlength: 80 },
     role: { type: String, enum: Object.values(ROLES), default: ROLES.USER as Role },
     language: { type: String, enum: LANGUAGES, default: 'English' },

@@ -13,7 +13,7 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   res.setHeader('X-DNS-Prefetch-Control', 'off')
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self), display-capture=(self)')
   if (env.isProduction) {
     res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains')
   }

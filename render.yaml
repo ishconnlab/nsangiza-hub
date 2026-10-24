@@ -38,6 +38,12 @@ services:
         sync: false
       - key: LIVEKIT_API_SECRET
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: PASSWORD_RESET_FROM
+        sync: false
+      - key: PUBLIC_APP_URL
+        value: https://nsangizahub.vercel.app
     # NOTE: the free plan has an ephemeral filesystem. Professional verification
     # uploads (server/uploads) are lost on redeploy/restart. Add a Render disk
     # (paid) or move uploads to object storage (S3/Cloudinary) for production.

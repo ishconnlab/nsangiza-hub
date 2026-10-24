@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Mail, ShieldPlus, Smile } from 'lucide-react'
 import { Button } from '../components/ui/button'
@@ -9,6 +9,7 @@ import { Checkbox } from '../components/ui/checkbox'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../hooks/auth-context'
 import { useI18n } from '../i18n/LanguageProvider'
+import { apiRequest } from '../lib/api'
 
 function ErrorBanner({ message }: { message: string }) {
   return (
@@ -87,6 +88,9 @@ export function Login() {
             </button>
           </div>
         </div>
+        <div className="-mt-2 flex justify-end">
+          <Link to="/forgot-password" className="text-sm font-medium text-hub-primary hover:underline">Forgot password?</Link>
+        </div>
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
@@ -96,6 +100,120 @@ export function Login() {
         <Link to="/register" state={location.state} className="font-medium text-hub-primary hover:underline">
           {t('auth.createAccount')}
         </Link>
+      </p>
+    </div>
+  )
+}
+
+export function ForgotPassword() {
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [sent, setSent] = useState(false)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    try {
+      const result = await apiRequest('/auth/forgot-password', { method: 'POST', body: { email } })
+      setSent(true)
+      toast.success(result.message)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not request a password reset.'
+      setError(message)
+      toast.error(message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+      <p className="text-xs font-semibold uppercase tracking-wide text-hub-primary">Account recovery</p>
+      <h1 className="mt-2 text-2xl font-bold text-hub-text">Forgot your password?</h1>
+      <p className="mt-1 text-sm text-hub-muted">Enter the email address on your account and we’ll send you a reset link.</p>
+      {sent ? (
+        <div role="status" className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          If an account matches that email, a password reset link has been sent. Check your inbox and spam folder.
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          {error ? <ErrorBanner message={error} /> : null}
+          <div className="space-y-1.5">
+            <Label htmlFor="forgot-email">Email</Label>
+            <Input id="forgot-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.rw" />
+          </div>
+          <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting ? 'Sending…' : 'Send reset link'}
+          </Button>
+        </form>
+      )}
+      <p className="mt-5 text-center text-sm text-hub-muted">
+        <Link to="/login" className="font-medium text-hub-primary hover:underline">Back to sign in</Link>
+      </p>
+    </div>
+  )
+}
+
+export function ResetPassword() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const token = searchParams.get('token') ?? ''
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    if (!token) {
+      setError('This password reset link is missing or invalid. Request a new one.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('The passwords do not match.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const result = await apiRequest('/auth/reset-password', { method: 'POST', body: { token, password } })
+      toast.success(result.message)
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not reset your password.'
+      setError(message)
+      toast.error(message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+      <p className="text-xs font-semibold uppercase tracking-wide text-hub-primary">Account recovery</p>
+      <h1 className="mt-2 text-2xl font-bold text-hub-text">Choose a new password</h1>
+      <p className="mt-1 text-sm text-hub-muted">Use at least 8 characters. The reset link expires after 30 minutes.</p>
+      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        {error ? <ErrorBanner message={error} /> : null}
+        {!token ? <ErrorBanner message="This password reset link is missing. Request a new one to continue." /> : null}
+        <div className="space-y-1.5">
+          <Label htmlFor="reset-password">New password</Label>
+          <Input id="reset-password" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="confirm-password">Confirm new password</Label>
+          <Input id="confirm-password" type="password" required minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+        </div>
+        <Button type="submit" className="w-full" disabled={submitting || !token}>
+          {submitting ? 'Saving…' : 'Reset password'}
+        </Button>
+      </form>
+      <p className="mt-5 text-center text-sm text-hub-muted">
+        <Link to="/forgot-password" className="font-medium text-hub-primary hover:underline">Request a new reset link</Link>
       </p>
     </div>
   )

@@ -45,4 +45,7 @@ export const env = {
   livekitUrl: process.env.LIVEKIT_URL,
   livekitApiKey: process.env.LIVEKIT_API_KEY,
   livekitApiSecret: process.env.LIVEKIT_API_SECRET,
+  resendApiKey: process.env.RESEND_API_KEY,
+  passwordResetFrom: process.env.PASSWORD_RESET_FROM,
+  publicAppUrl: process.env.PUBLIC_APP_URL ?? (isProduction ? 'https://nsangizahub.vercel.app' : 'http://localhost:5173'),
 } as const
