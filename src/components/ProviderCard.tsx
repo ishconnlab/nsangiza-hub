@@ -28,20 +28,20 @@ export function ProviderCard({ provider, verifiedOnly = true }: { provider: Prof
   return (
     <Card className="group overflow-hidden transition-shadow hover:shadow-lg">
       <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3">
             <Avatar className="h-12 w-12 ring-2 ring-white shadow-sm">
               <AvatarImage src={providerPhoto(provider.id)} alt="" />
               <AvatarFallback>{initials(provider.name)}</AvatarFallback>
             </Avatar>
-            <div>
-              <Link to={profileHref} className="font-semibold text-hub-text hover:text-hub-primary">
+            <div className="min-w-0">
+              <Link to={profileHref} className="block break-words text-sm font-semibold leading-tight text-hub-text hover:text-hub-primary sm:text-base">
                 {provider.name}
               </Link>
-              <p className="text-xs font-medium text-hub-primary">{provider.providerType}</p>
+              <p className="line-clamp-2 text-xs font-medium text-hub-primary">{provider.providerType}</p>
             </div>
           </div>
-          <div className="flex items-center gap-1 text-sm font-semibold text-hub-text">
+          <div className="flex shrink-0 items-center gap-1 text-xs font-semibold text-hub-text sm:text-sm">
             <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
             {provider.rating.toFixed(1)}
             <span className="text-xs font-normal text-hub-muted">({provider.reviewCount})</span>
@@ -59,7 +59,7 @@ export function ProviderCard({ provider, verifiedOnly = true }: { provider: Prof
         <p className="mt-3 line-clamp-2 text-sm text-hub-muted">{provider.about}</p>
 
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-hub-muted">
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex min-w-0 items-center gap-1 truncate">
             <MapPin className="h-3.5 w-3.5" />
             {provider.city ?? 'Rwanda'}
           </span>

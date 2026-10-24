@@ -9,6 +9,7 @@ import Conversation from '../models/Conversation'
 import FollowUp from '../models/FollowUp'
 import User from '../models/User'
 import AuditLog from '../models/AuditLog'
+import Notification from '../models/Notification'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
@@ -76,11 +77,19 @@ router.post(
     if (professional.documents.length === 0) {
       throw ApiError.badRequest('Upload at least one document (e.g. your licence or degree certificate) before submitting for verification.')
     }
+    const isNewSubmission = professional.verification.status !== 'Submitted'
     professional.verification.status = 'Submitted'
     professional.onboarding.submitted = true
     professional.onboarding.step = 8
     await professional.save()
     await AuditLog.create({ actor: String(req.userId), action: 'professional.submit', resource: 'Professional', resourceId: String(professional._id) })
+    if (isNewSubmission) {
+      const admins = await User.find({ role: { $in: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR', 'SUPERVISOR'] }, active: true }).select('_id').lean()
+      if (admins.length) await Notification.insertMany(admins.map((admin) => ({
+        user: admin._id, type: 'professional', title: 'New professional application',
+        body: 'A professional profile has been submitted for verification.', link: '/admin/professionals',
+      })))
+    }
     res.json(ok({ professional }, 'Application submitted. Your documents are being reviewed.'))
   }),
 )
@@ -212,7 +221,7 @@ router.get(
   requireRole('PROFESSIONAL'),
   asyncHandler(async (req: AuthedRequest, res) => {
     const professional = await currentProfessional(req)
-    const appointments = await Appointment.find({ professional: professional._id, status: { $in: ['confirmed', 'completed', 'requested'] } })
+    const appointments = await Appointment.find({ professional: professional._id, status: { $in: ['confirmed', 'completed', 'requested', 'rescheduled'] } })
       .sort({ date: -1 })
       .select('user date status type')
       .lean()
@@ -247,16 +256,14 @@ router.get(
 
     // Least-privilege guard: only users with a real professional↔user
     // relationship (appointment or follow-up) may be viewed as clients.
-    const hasRelationship =
-      (await Appointment.exists({ professional: professional._id, user: req.params.id })) !== null ||
-      (await FollowUp.exists({ professional: professional._id, user: req.params.id })) !== null
-    if (!hasRelationship) throw ApiError.notFound('Client not found.')
+    const eligibleStatuses = ['requested', 'confirmed', 'rescheduled', 'completed']
+    const appointments = await Appointment.find({ professional: professional._id, user: req.params.id, status: { $in: eligibleStatuses } }).sort({ date: -1 }).lean()
+    if (!appointments.length) throw ApiError.notFound('Client not found.')
 
     const user = await User.findById(req.params.id).select('displayName city language communicationPreference').lean()
     if (!user) throw ApiError.notFound('Client not found.')
 
-    const appointments = await Appointment.find({ professional: professional._id, user: user._id }).sort({ date: -1 }).lean()
-    const conversation = await Conversation.findOne({ professional: professional._id, participants: user._id }).lean()
+    const conversation = await Conversation.findOne({ professional: professional._id, user: user._id, participants: { $all: [String(user._id), String(req.userId)], $size: 2 } }).lean()
     const followUps = await FollowUp.find({ professional: professional._id, user: user._id }).sort({ dueAt: 1 }).lean()
 
     // Least-privilege principle: only aggregate, non-clinical information by default.

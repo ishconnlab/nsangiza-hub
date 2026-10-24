@@ -27,6 +27,12 @@ async function accessibleConversation(id: string, userId: string) {
   if (!professionalUserId || clientId === professionalUserId || !ids.includes(clientId) || !ids.includes(professionalUserId) || ids.includes(userId) === false) {
     throw ApiError.forbidden('This conversation does not match its assigned participants.')
   }
+  const appointment = await Appointment.exists({
+    user: conversation.user,
+    professional: conversation.professional,
+    status: { $in: ['requested', 'confirmed', 'rescheduled', 'completed'] },
+  })
+  if (!appointment) throw ApiError.forbidden('An appointment is required to access this conversation.')
   return conversation
 }
 
@@ -74,12 +80,18 @@ router.get(
       ? await Professional.find({ _id: { $in: professionalIds } }).select('user').lean()
       : []
     const ownerByProfile = new Map(professionalProfiles.map((p) => [String(p._id), p.user ? String(p.user) : '']))
+    const eligibleAppointments = await Appointment.find({
+      professional: actor.role === 'PROFESSIONAL' ? (await Professional.findOne({ user: req.userId }).select('_id').lean())?._id : undefined,
+      user: actor.role === 'USER' ? req.userId : undefined,
+      status: { $in: ['requested', 'confirmed', 'rescheduled', 'completed'] },
+    }).select('user professional').lean()
+    const eligiblePairs = new Set(eligibleAppointments.map((a) => `${String(a.user)}:${String(a.professional)}`))
     const conversations = candidates.filter((c) => {
       if (!c.user || !c.professional || c.participants.length !== 2) return false
       const clientId = String(c.user)
       const professionalUserId = ownerByProfile.get(String(c.professional))
       const participants = c.participants.map(String)
-      return Boolean(professionalUserId && clientId !== professionalUserId && participants.includes(clientId) && participants.includes(professionalUserId))
+      return Boolean(professionalUserId && clientId !== professionalUserId && participants.includes(clientId) && participants.includes(professionalUserId) && eligiblePairs.has(`${clientId}:${String(c.professional)}`))
     })
 
     const otherIds = new Set<string>()
@@ -131,6 +143,11 @@ router.post(
     if (!professional || !professional.user || professional.active === false || professional.verification.status !== 'Approved') {
       throw ApiError.notFound('Professional not found.')
     }
+    const appointment = await Appointment.exists({
+      user: me._id, professional: professional._id,
+      status: { $in: ['requested', 'confirmed', 'rescheduled', 'completed'] },
+    })
+    if (!appointment) throw ApiError.forbidden('Request an appointment before messaging this professional.')
     const conversation = await openDirectConversation(String(me._id), me.displayName ?? 'Client', professional)
     res.status(201).json(ok({ conversation: { id: String(conversation._id) } }, 'Conversation ready.'))
   }),
@@ -141,7 +158,29 @@ router.get(
   asyncHandler(async (req: AuthedRequest, res) => {
     const conversation = await accessibleConversation(req.params.id, req.userId!)
     const messages = await Message.find({ conversation: conversation._id }).sort({ createdAt: 1 }).lean()
-    res.json(ok({ conversation: { id: String(conversation._id), status: conversation.status }, messages }))
+    const confirmedCalls = await Appointment.find({
+      user: conversation.user,
+      professional: conversation.professional,
+      status: 'confirmed',
+      type: { $in: ['Audio call', 'Video call'] },
+    }).sort({ date: 1 }).select('_id type date endDate durationMin').lean()
+    const now = Date.now()
+    const callAppointment = confirmedCalls.find((appointment) => {
+      const start = new Date(appointment.date).getTime()
+      const end = appointment.endDate
+        ? new Date(appointment.endDate).getTime()
+        : start + (appointment.durationMin ?? 45) * 60_000
+      return now <= end + 15 * 60_000
+    })
+    res.json(ok({
+      conversation: {
+        id: String(conversation._id),
+        status: conversation.status,
+        callAppointmentId: callAppointment ? String(callAppointment._id) : undefined,
+        callType: callAppointment?.type,
+      },
+      messages,
+    }))
   }),
 )
 
@@ -154,7 +193,6 @@ router.post(
     const start = new Date(appointment.date).getTime()
     const end = appointment.endDate ? new Date(appointment.endDate).getTime() : start + (appointment.durationMin ?? 45) * 60_000
     const now = Date.now()
-    if (now < start - 10 * 60_000) throw ApiError.badRequest('This session can be started 10 minutes before its scheduled time.')
     if (now > end + 15 * 60_000) throw ApiError.badRequest('This session has ended.')
 
     const profile = await Professional.findById(appointment.professional).lean()
@@ -165,7 +203,10 @@ router.post(
     const client = await User.findById(clientId).select('displayName role').lean()
     if (client?.role !== 'USER') throw ApiError.forbidden('This appointment is not assigned to a client account.')
     const conversation = await openDirectConversation(clientId, client.displayName ?? 'Client', profile)
-    res.json(ok({ conversation: { id: String(conversation._id) } }, 'Session ready.'))
+    const roomName = ['Video call', 'Audio call'].includes(appointment.type)
+      ? `nsangiza-${appointment.joinToken || String(appointment._id)}`
+      : undefined
+    res.json(ok({ conversation: { id: String(conversation._id) }, roomName, callType: roomName ? appointment.type : undefined }, 'Session ready.'))
   }),
 )
 

@@ -37,7 +37,7 @@ const authLimiter = rateLimit({
 })
 
 const registerSchema = z.object({
-  email: z.string().email('Please enter a valid email address.'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address.'),
   password: z.string().min(8, 'Password must be at least 8 characters.'),
   displayName: z.string().min(2, 'Please enter your display name.').max(80),
   role: z.enum([ROLES.USER, ROLES.PROFESSIONAL]).optional(),
@@ -110,7 +110,7 @@ router.post(
 )
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address.'),
+  email: z.string().trim().toLowerCase().email('Please enter a valid email address.'),
   password: z.string().min(1, 'Please enter your password.'),
 })
 

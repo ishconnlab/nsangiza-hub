@@ -58,6 +58,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: '/admin/safeguarding', labelKey: 'navApp.safeguarding', shortKey: 'navApp.safety', icon: ShieldAlert },
   { to: '/admin/resources', labelKey: 'navApp.resources', icon: FolderOpen, adminOnly: true },
   { to: '/admin/community', labelKey: 'navApp.communityModeration', shortKey: 'navApp.moderation', icon: MessageSquare },
+  { to: '/admin/notifications', labelKey: 'navApp.notifications', shortKey: 'navApp.alerts', icon: Bell },
   { to: '/admin/audit-logs', labelKey: 'navApp.auditLogs', shortKey: 'navApp.audit', icon: Tickets, adminOnly: true },
 ]
 

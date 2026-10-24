@@ -11,7 +11,7 @@ export function useNotifications() {
     queryKey: notificationKeys.all,
     queryFn: () =>
       get<{ notifications: AppNotification[]; unreadCount: number }>('/notifications', { pageSize: 50 }),
-    refetchInterval: 60_000,
+    refetchInterval: 15_000,
   })
 }
 

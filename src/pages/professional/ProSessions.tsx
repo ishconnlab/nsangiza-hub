@@ -43,7 +43,8 @@ export default function ProSessions() {
   async function startSession(a: Appointment) {
     try {
       const result = await openSession.mutateAsync(a._id)
-      navigate(`/professional/messages/${result.data.conversation.id}`)
+      if (a.type === 'Video call' || a.type === 'Audio call') navigate(`/professional/call/${a._id}`)
+      else navigate(`/professional/messages/${result.data.conversation.id}`)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Could not open this session.')
     }
@@ -87,8 +88,8 @@ export default function ProSessions() {
                       {a.status === 'confirmed' && (() => {
                         const start = new Date(a.date).getTime()
                         const end = new Date(a.endDate ?? new Date(start + (a.durationMin || 45) * 60_000)).getTime()
-                        const canStart = now >= start - 10 * 60_000 && now <= end + 15 * 60_000
-                        return <Button size="sm" onClick={() => void startSession(a)} disabled={!canStart || openSession.isPending}>{canStart ? 'Start session' : 'Available 10 minutes before start'}</Button>
+                        const canStart = now <= end + 15 * 60_000
+                        return <Button size="sm" onClick={() => void startSession(a)} disabled={!canStart || openSession.isPending}>{canStart ? (now < start ? 'Start early' : 'Start session') : 'Session ended'}</Button>
                       })()}
                       {a.status === 'confirmed' && new Date(a.date).getTime() <= now && (
                         <Button size="sm" variant="outline" onClick={() => void setStatus(a, 'completed')}>Mark completed</Button>

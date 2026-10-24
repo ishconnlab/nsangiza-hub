@@ -122,14 +122,14 @@ export default function ProfessionalDetail() {
             </div>
             <div className="p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex items-center gap-4">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <Avatar className="-mt-14 h-20 w-20 ring-4 ring-white">
                   <AvatarImage src={providerPhoto(professional.id)} alt="" />
                   <AvatarFallback className="text-xl">{initials(professional.name)}</AvatarFallback>
                 </Avatar>
-                <div className="pt-1">
-                  <h1 className="text-2xl font-bold text-hub-text">{professional.name}</h1>
-                  <p className="text-sm font-medium text-hub-primary">{professional.providerType}</p>
+                <div className="min-w-0 pt-1">
+                  <h1 className="break-words text-xl font-bold leading-tight text-hub-text sm:text-2xl">{professional.name}</h1>
+                  <p className="break-words text-sm font-medium text-hub-primary">{professional.providerType}</p>
                   {professional.verification.status === 'Approved' && (
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-hub-success">
                       <BadgeCheck className="h-4 w-4" />
@@ -138,7 +138,7 @@ export default function ProfessionalDetail() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-sm font-semibold">
+              <div className="flex shrink-0 items-center gap-1 text-xs font-semibold sm:text-sm">
                 <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
                 {professional.rating.toFixed(1)}
                 <span className="font-normal text-hub-muted">({professional.reviewCount} reviews)</span>
@@ -260,7 +260,7 @@ export default function ProfessionalDetail() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="book-date">Date</Label>
                 <Input id="book-date" type="date" min={new Date().toISOString().slice(0, 10)} value={date} onChange={(e) => setDate(e.target.value)} required />

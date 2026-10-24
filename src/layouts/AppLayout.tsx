@@ -28,6 +28,7 @@ export default function AppLayout() {
   const prefix = dashboardPathFor(user?.role)
   const nav = navFor(user?.role)
   const title = t(pageTitleKeyFor(location.pathname, user?.role))
+  const isCallRoom = location.pathname.includes('/call/')
   const activeItem = nav.find((i) => location.pathname === i.to || location.pathname.startsWith(i.to + '/'))
   const isNested = Boolean(activeItem && location.pathname !== activeItem.to)
   const reduceMotion = user?.privacySettings?.reduceMotion === true
@@ -131,10 +132,10 @@ export default function AppLayout() {
       data-high-contrast={highContrast ? '' : undefined}
       data-dyslexia-friendly={dyslexiaFriendly ? '' : undefined}
     >
-      <div className="sticky top-0 hidden h-screen lg:block">{sidebar}</div>
+      {!isCallRoom && <div className="sticky top-0 hidden h-screen lg:block">{sidebar}</div>}
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
+        {!isCallRoom && <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
           <div className="flex h-16 items-center justify-between gap-3 px-4 pt-[env(safe-area-inset-top)] sm:px-6">
             <div className="flex min-w-0 items-center gap-1.5">
               {isNested ? (
@@ -185,11 +186,11 @@ export default function AppLayout() {
               {t('app.offline')}
             </p>
           ) : null}
-        </header>
+        </header>}
 
-        <main className="flex-1 px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-8">
-          <div className="mx-auto w-full max-w-5xl anim-page" key={location.pathname}>
-            <NotificationManager />
+        <main className={cn('flex-1', isCallRoom ? 'px-0 py-0' : 'px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-8')}>
+          <div className={cn('mx-auto w-full anim-page', isCallRoom ? 'max-w-none' : 'max-w-5xl')} key={location.pathname}>
+            {!isCallRoom && <NotificationManager />}
             <Suspense fallback={<Loading label="Loading…" />}>
               <Outlet />
             </Suspense>
@@ -197,7 +198,7 @@ export default function AppLayout() {
         </main>
       </div>
 
-      <BottomTaskbar role={user?.role} />
+      {!isCallRoom && <BottomTaskbar role={user?.role} />}
     </div>
   )
 }

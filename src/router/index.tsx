@@ -28,6 +28,7 @@ const NotFound = lazy(() => import('../pages/NotFound'))
 const UserDashboard = lazy(() => import('../pages/user/UserDashboard'))
 const CheckIn = lazy(() => import('../pages/user/CheckIn'))
 const Appointments = lazy(() => import('../pages/user/Appointments'))
+const CallRoom = lazy(() => import('../pages/CallRoom'))
 const Messages = lazy(() => import('../pages/user/Messages'))
 const Community = lazy(() => import('../pages/user/Community'))
 const CommunityGroup = lazy(() => import('../pages/user/CommunityGroup'))
@@ -95,6 +96,7 @@ export const router = createBrowserRouter([
                   { path: '/app', element: <UserDashboard /> },
                   { path: '/app/check-in', element: <CheckIn /> },
                   { path: '/app/appointments', element: <Appointments /> },
+                  { path: '/app/call/:appointmentId', element: <CallRoom /> },
                   { path: '/app/messages', element: <Messages /> },
                   { path: '/app/messages/:conversationId', element: <Messages /> },
                   { path: '/app/community', element: <Community /> },
@@ -120,6 +122,7 @@ export const router = createBrowserRouter([
                   { path: '/professional/profile', element: <ProProfile /> },
                   { path: '/professional/availability', element: <ProAvailability /> },
                   { path: '/professional/appointments', element: <ProSessions /> },
+                  { path: '/professional/call/:appointmentId', element: <CallRoom /> },
                   { path: '/professional/clients', element: <ProClients /> },
                   { path: '/professional/clients/:id', element: <ProClientDetail /> },
                   { path: '/professional/messages', element: <Messages /> },
@@ -146,6 +149,7 @@ export const router = createBrowserRouter([
                   { path: '/admin/professionals', element: <AdminProfessionals /> },
                   { path: '/admin/safeguarding', element: <AdminSafeguarding /> },
                   { path: '/admin/community', element: <AdminCommunity /> },
+                  { path: '/admin/notifications', element: <Notifications /> },
                 ],
               },
               {

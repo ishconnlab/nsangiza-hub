@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, Check, CheckCheck, Lock, Search, Send, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Check, CheckCheck, Lock, Phone, Search, Send, ShieldAlert, Video } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -67,9 +67,9 @@ export default function Messages() {
   }, [summaries, query])
 
   useEffect(() => {
-    if (conversationId) void markRead.mutateAsync(conversationId)
+    if (conversationId) markRead.mutate(conversationId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId])
+  }, [conversationId, messages.length])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -202,16 +202,29 @@ export default function Messages() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-hub-text">{active?.participantName ?? 'Conversation'}</p>
                     <p className="flex items-center gap-1 text-xs text-hub-muted">
-                      <Lock className="h-3 w-3" /> End-to-end private
+                      <Lock className="h-3 w-3" /> Private one-to-one conversation
                     </p>
                   </div>
                 </div>
-                <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="inline-flex shrink-0 items-center gap-1 text-hub-muted">
-                      <ShieldAlert className="h-4 w-4" /> Report
+                <div className="flex shrink-0 items-center gap-1">
+                  {thread.data?.data.conversation.callAppointmentId && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="inline-flex items-center gap-1"
+                      onClick={() => navigate(`${base}/call/${thread.data!.data.conversation.callAppointmentId}`)}
+                      aria-label={`Start ${thread.data.data.conversation.callType === 'Audio call' ? 'audio' : 'video'} call`}
+                    >
+                      {thread.data.data.conversation.callType === 'Audio call' ? <Phone className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+                      <span className="hidden sm:inline">Call</span>
                     </Button>
-                  </DialogTrigger>
+                  )}
+                  <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="ghost" className="inline-flex items-center gap-1 text-hub-muted">
+                        <ShieldAlert className="h-4 w-4" /><span className="hidden sm:inline">Report</span>
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Report this conversation</DialogTitle>
@@ -235,7 +248,8 @@ export default function Messages() {
                       </Button>
                     </DialogFooter>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                </div>
               </div>
 
               <div className="flex-1 space-y-1 overflow-y-auto bg-slate-50/40 px-4 py-4">

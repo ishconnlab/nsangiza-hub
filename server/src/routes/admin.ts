@@ -223,7 +223,7 @@ router.patch(
         type: 'professional',
         title: 'Application update',
         body: `Your application status is now: ${professional.verification.status}.`,
-        link: '/professional/verification',
+        link: '/professional/profile',
       })
     }
     await AuditLog.create({ actor: String(req.userId), action: `admin.verification.${body.status.toLowerCase().replace(' ', '-')}`, resource: 'Professional', resourceId: req.params.id })

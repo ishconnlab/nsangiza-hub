@@ -12,16 +12,16 @@ export function useConversations() {
   return useQuery({
     queryKey: conversationKeys.all,
     queryFn: () => get<{ conversations: ConversationSummary[] }>('/conversations'),
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   })
 }
 
 export function useConversation(id: string) {
   return useQuery({
     queryKey: conversationKeys.messages(id),
-    queryFn: () => get<{ conversation: { id: string; status: string }; messages: Message[] }>(`/conversations/${id}`),
+    queryFn: () => get<{ conversation: { id: string; status: string; callAppointmentId?: string; callType?: string }; messages: Message[] }>(`/conversations/${id}`),
     enabled: Boolean(id),
-    refetchInterval: 20_000,
+    refetchInterval: 4_000,
   })
 }
 
@@ -39,7 +39,7 @@ export function useStartConversation() {
 export function useOpenAppointmentSession() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (appointmentId: string) => post<{ conversation: { id: string } }>(`/conversations/session/${appointmentId}`, {}),
+    mutationFn: (appointmentId: string) => post<{ conversation: { id: string }; roomName?: string; callType?: string }>(`/conversations/session/${appointmentId}`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
     },

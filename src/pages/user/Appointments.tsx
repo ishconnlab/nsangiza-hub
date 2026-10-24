@@ -39,7 +39,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const start = new Date(appointment.date)
   const end = appointment.endDate ? new Date(appointment.endDate) : new Date(start.getTime() + (appointment.durationMin || 45) * 60_000)
   const beforeStart = now < start.getTime()
-  const joinable = appointment.status === 'confirmed' && now >= start.getTime() - 10 * 60_000 && now <= end.getTime() + 15 * 60_000
+  const joinable = appointment.status === 'confirmed' && now <= end.getTime() + 15 * 60_000
   async function doCancel() {
     setBusy('cancel')
     try {
@@ -70,7 +70,8 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   async function joinContent() {
     try {
       const result = await openSession.mutateAsync(appointment._id)
-      navigate(`/app/messages/${result.data.conversation.id}`)
+      if (appointment.type === 'Video call' || appointment.type === 'Audio call') navigate(`/app/call/${appointment._id}`)
+      else navigate(`/app/messages/${result.data.conversation.id}`)
       setDetailOpen(false)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Could not open your supporter session.')
@@ -120,9 +121,9 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {joinable ? (
-              <Button size="sm" className="inline-flex items-center gap-1.5" onClick={() => setDetailOpen(true)}>
+                <Button size="sm" className="inline-flex items-center gap-1.5" onClick={() => setDetailOpen(true)}>
                 <Video className="h-4 w-4" />
-                {t('appt.joinSession')}
+                {beforeStart ? 'Start early' : t('appt.joinSession')}
               </Button>
             ) : null}
             <Button size="sm" variant="outline" onClick={() => setDetailOpen(true)}>
