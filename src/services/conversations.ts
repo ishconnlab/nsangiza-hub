@@ -39,7 +39,13 @@ export function useStartConversation() {
 export function useOpenAppointmentSession() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (appointmentId: string) => post<{ conversation: { id: string }; roomName?: string; callType?: string }>(`/conversations/session/${appointmentId}`, {}),
+    mutationFn: (appointmentId: string) => post<{
+      conversation: { id: string }
+      livekitUrl?: string
+      token?: string
+      callType?: string
+      otherParticipantName?: string
+    }>(`/conversations/session/${appointmentId}`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
     },

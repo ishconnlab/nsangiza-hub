@@ -32,6 +32,12 @@ services:
         value: none
       - key: COOKIE_SECURE
         value: "true"
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
     # NOTE: the free plan has an ephemeral filesystem. Professional verification
     # uploads (server/uploads) are lost on redeploy/restart. Add a Render disk
     # (paid) or move uploads to object storage (S3/Cloudinary) for production.

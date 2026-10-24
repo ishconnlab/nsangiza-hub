@@ -42,4 +42,7 @@ export const env = {
   cookieSameSite: sameSite,
   cookieSecure: bool(process.env.COOKIE_SECURE, isProduction),
   cookieDomain: process.env.COOKIE_DOMAIN,
+  livekitUrl: process.env.LIVEKIT_URL,
+  livekitApiKey: process.env.LIVEKIT_API_KEY,
+  livekitApiSecret: process.env.LIVEKIT_API_SECRET,
 } as const

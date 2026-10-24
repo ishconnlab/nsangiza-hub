@@ -9,6 +9,8 @@ import Professional from '../models/Professional'
 import User from '../models/User'
 import Notification from '../models/Notification'
 import Appointment from '../models/Appointment'
+import { AccessToken } from 'livekit-server-sdk'
+import { env } from '../config/env'
 
 const router = Router()
 router.use(requireAuth)
@@ -205,10 +207,32 @@ router.post(
     const client = await User.findById(clientId).select('displayName role').lean()
     if (client?.role !== 'USER') throw ApiError.forbidden('This appointment is not assigned to a client account.')
     const conversation = await openDirectConversation(clientId, client.displayName ?? 'Client', profile)
-    const roomName = ['Video call', 'Audio call'].includes(appointment.type)
+    const isCall = ['Video call', 'Audio call'].includes(appointment.type)
+    const roomName = isCall
       ? `nsangiza-${appointment.joinToken || String(appointment._id)}`
       : undefined
-    res.json(ok({ conversation: { id: String(conversation._id) }, roomName, callType: roomName ? appointment.type : undefined }, 'Session ready.'))
+    if (!roomName) {
+      res.json(ok({ conversation: { id: String(conversation._id) } }, 'Session ready.'))
+      return
+    }
+    if (!env.livekitUrl || !env.livekitApiKey || !env.livekitApiSecret) {
+      throw new ApiError(503, 'In-app calling is not configured yet. Add the LiveKit server URL and API credentials.', 'LIVEKIT_NOT_CONFIGURED')
+    }
+    const actor = await User.findById(req.userId).select('displayName').lean()
+    const ttlSeconds = Math.min(6 * 60 * 60, Math.max(60, Math.ceil((end + 15 * 60_000 - now) / 1000)))
+    const accessToken = new AccessToken(env.livekitApiKey, env.livekitApiSecret, {
+      identity: String(req.userId),
+      name: actor?.displayName ?? 'Nsangiza participant',
+      ttl: ttlSeconds,
+    })
+    accessToken.addGrant({ roomJoin: true, room: roomName, canPublish: true, canSubscribe: true })
+    res.json(ok({
+      conversation: { id: String(conversation._id) },
+      livekitUrl: env.livekitUrl,
+      token: await accessToken.toJwt(),
+      callType: appointment.type,
+      otherParticipantName: req.userId === clientId ? profile.name : client.displayName ?? 'Client',
+    }, 'Session ready.'))
   }),
 )
 

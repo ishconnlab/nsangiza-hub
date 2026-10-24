@@ -76,10 +76,14 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
     }
   }
   async function joinContent() {
+    if (appointment.type === 'Video call' || appointment.type === 'Audio call') {
+      navigate(`/app/call/${appointment._id}`)
+      setDetailOpen(false)
+      return
+    }
     try {
       const result = await openSession.mutateAsync(appointment._id)
-      if (appointment.type === 'Video call' || appointment.type === 'Audio call') navigate(`/app/call/${appointment._id}`)
-      else navigate(`/app/messages/${result.data.conversation.id}`)
+      navigate(`/app/messages/${result.data.conversation.id}`)
       setDetailOpen(false)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Could not open your supporter session.')

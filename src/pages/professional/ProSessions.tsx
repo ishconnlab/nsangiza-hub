@@ -41,10 +41,13 @@ export default function ProSessions() {
   }
 
   async function startSession(a: Appointment) {
+    if (a.type === 'Video call' || a.type === 'Audio call') {
+      navigate(`/professional/call/${a._id}`)
+      return
+    }
     try {
       const result = await openSession.mutateAsync(a._id)
-      if (a.type === 'Video call' || a.type === 'Audio call') navigate(`/professional/call/${a._id}`)
-      else navigate(`/professional/messages/${result.data.conversation.id}`)
+      navigate(`/professional/messages/${result.data.conversation.id}`)
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Could not open this session.')
     }
