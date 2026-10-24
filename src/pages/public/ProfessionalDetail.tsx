@@ -20,6 +20,25 @@ import { useStartConversation } from '../../services/conversations'
 import { useCreateAppointment } from '../../services/appointments'
 import { useProfessionalDetail } from '../../services/professionals'
 
+const SESSION_DURATION_MIN = 45
+const MIN_BOOKING_NOTICE_MS = 5 * 60_000
+const RWANDA_TIME_ZONE = 'Africa/Kigali'
+
+function rwandaDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: RWANDA_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+function rwandaDateTime(date: string, time: string) {
+  return new Date(`${date}T${time}:00+02:00`)
+}
+
 export default function ProfessionalDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -38,17 +57,22 @@ export default function ProfessionalDetail() {
   const professional = data?.data.professional
   const availableDays = (professional?.availability ?? []).filter((a) => a.enabled)
 
-  const selectedDayName = date ? new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long' }) : ''
+  const selectedDayName = date
+    ? new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: RWANDA_TIME_ZONE }).format(rwandaDateTime(date, '12:00'))
+    : ''
   const daySlots = availableDays.filter((a) => a.day === selectedDayName)
   const timeOptions: string[] = []
   for (const slot of daySlots) {
     const [sh, sm] = slot.start.split(':').map(Number)
     const [eh, em] = slot.end.split(':').map(Number)
-    for (let m = sh * 60 + sm; m + 30 <= eh * 60 + em; m += 30) {
-      timeOptions.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`)
+    for (let m = sh * 60 + sm; m + SESSION_DURATION_MIN <= eh * 60 + em; m += 30) {
+      const option = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+      if (date === rwandaDateKey() && rwandaDateTime(date, option).getTime() < Date.now() + MIN_BOOKING_NOTICE_MS) continue
+      timeOptions.push(option)
     }
   }
-  const finalTime = timeOptions.length > 0 ? (timeOptions.includes(time) ? time : timeOptions[0]) : time
+  const manualTimeAllowed = availableDays.length === 0
+  const finalTime = timeOptions.length > 0 ? (timeOptions.includes(time) ? time : timeOptions[0]) : manualTimeAllowed ? time : ''
 
   function requireAuth() {
     if (!isAuthenticated) {
@@ -78,12 +102,17 @@ export default function ProfessionalDetail() {
       toast.error('Please choose a date and time.')
       return
     }
+    const appointmentDate = rwandaDateTime(date, finalTime)
+    if (Number.isNaN(appointmentDate.getTime()) || appointmentDate.getTime() < Date.now() + MIN_BOOKING_NOTICE_MS) {
+      toast.error('Choose a time at least five minutes from now.')
+      return
+    }
     setSubmitting(true)
     try {
       await createMutation.mutateAsync({
         professionalId: professional.id,
-        date: new Date(`${date}T${finalTime}`).toISOString(),
-        durationMin: 45,
+        date: appointmentDate.toISOString(),
+        durationMin: SESSION_DURATION_MIN,
         type,
         notes,
       })
@@ -263,14 +292,14 @@ export default function ProfessionalDetail() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="book-date">Date</Label>
-                <Input id="book-date" type="date" min={new Date().toISOString().slice(0, 10)} value={date} onChange={(e) => setDate(e.target.value)} required />
+                <Input id="book-date" type="date" min={rwandaDateKey()} value={date} onChange={(e) => setDate(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="book-time">Time</Label>
-                {timeOptions.length > 0 ? (
+                {availableDays.length > 0 ? (
                   <Select value={finalTime} onValueChange={setTime}>
-                    <SelectTrigger id="book-time" aria-label="Session time">
-                      <SelectValue />
+                    <SelectTrigger id="book-time" aria-label="Session time" disabled={timeOptions.length === 0}>
+                      <SelectValue placeholder={timeOptions.length === 0 ? 'No available times' : 'Choose a time'} />
                     </SelectTrigger>
                     <SelectContent>
                       {timeOptions.map((t) => (
@@ -283,8 +312,13 @@ export default function ProfessionalDetail() {
                 ) : (
                   <Input id="book-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
                 )}
-                {daySlots.length === 0 && selectedDayName ? (
+                {availableDays.length > 0 && daySlots.length === 0 && selectedDayName ? (
                   <p className="text-xs text-hub-muted">No listed hours on {selectedDayName} — pick another day.</p>
+                ) : null}
+                {availableDays.length > 0 && daySlots.length > 0 && timeOptions.length === 0 ? (
+                  <p className="text-xs text-hub-muted">
+                    {date === rwandaDateKey() ? 'No remaining times today.' : 'No times fit the professional’s hours on this date.'} Choose another day.
+                  </p>
                 ) : null}
               </div>
             </div>

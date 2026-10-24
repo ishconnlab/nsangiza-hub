@@ -87,7 +87,7 @@ async function findConflict(professionalId: string, start: Date, end: Date, excl
   })
 }
 type AvailabilitySlot = { day?: string | null; start?: string; end?: string; enabled?: boolean }
-function assertWithinAvailability(professional: { availability?: readonly AvailabilitySlot[] | null }, date: Date) {
+function assertWithinAvailability(professional: { availability?: readonly AvailabilitySlot[] | null }, date: Date, durationMin: number) {
   const slots = (professional.availability ?? []).filter((s) => s.enabled && s.day && s.start && s.end)
   if (slots.length === 0) return
   const day = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'Africa/Kigali' }).format(date)
@@ -103,7 +103,7 @@ function assertWithinAvailability(professional: { availability?: readonly Availa
   const within = daySlots.some((s) => {
     const [sh, sm] = s.start!.split(':').map(Number)
     const [eh, em] = s.end!.split(':').map(Number)
-    return minutes >= sh * 60 + sm && minutes < eh * 60 + em
+    return minutes >= sh * 60 + sm && minutes + durationMin <= eh * 60 + em
   })
   if (!within) {
     throw ApiError.badRequest('That time is outside the professional\'s available hours. Pick a listed slot.')
@@ -166,7 +166,7 @@ router.post(
     }
     const durationMin = body.durationMin ?? 45
     const endDate = new Date(date.getTime() + durationMin * 60_000)
-    assertWithinAvailability(professional, date)
+    assertWithinAvailability(professional, date, durationMin)
     const conflict = await findConflict(String(professional._id), date, endDate)
     if (conflict) throw ApiError.badRequest('That time is already taken. Please pick another slot.')
     const appointment = await Appointment.create({
@@ -256,7 +256,7 @@ router.patch(
       }
       const professional = await Professional.findById(appointment.professional).select('availability sessionTypes').lean()
       if (!professional) throw ApiError.notFound('Professional not found.')
-      assertWithinAvailability(professional, date)
+      assertWithinAvailability(professional, date, appointment.durationMin)
       const supportedTypes = professional.sessionTypes?.length ? professional.sessionTypes : ['Video call']
       const nextType = body.type ?? appointment.type
       if (body.type !== undefined && body.type !== appointment.type && !supportedTypes.includes(body.type)) {
