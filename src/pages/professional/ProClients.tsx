@@ -66,7 +66,7 @@ function RequestRow({ appointment, clientName }: { appointment: Appointment; cli
               {initials(clientName)}
             </span>
             <div>
-              <p className="font-semibold text-hub-text">{clientName}</p>
+              <Link to={`/professional/clients/${String(appointment.user)}`} className="font-semibold text-hub-primary hover:underline">{clientName} · View details</Link>
               <p className="inline-flex items-center gap-1.5 text-sm text-hub-muted">
                 <CalendarClock className="h-4 w-4 text-hub-primary" />
                 {appointment.type} · {formatDate(appointment.date)} at {formatTime(appointment.date)} · {appointment.durationMin} min

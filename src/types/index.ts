@@ -180,6 +180,7 @@ export interface Appointment {
   endDate?: string
   durationMin: number
   type: SessionType
+  availableSessionTypes?: SessionType[]
   status: AppointmentStatus
   notes?: string
   joinToken?: string
@@ -204,6 +205,7 @@ export interface Message {
   senderRole: Role
   body: string
   kind: 'text' | 'emoji' | 'audio' | 'attachment' | 'system'
+  attachment?: { name: string; mimeType: string; dataUrl?: string; size: number }
   status?: string
   createdAt?: string
 }

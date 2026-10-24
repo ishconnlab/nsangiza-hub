@@ -12,14 +12,19 @@ import { formatDate, formatTime, initials } from '../../lib/format'
 import { ApiError } from '../../lib/api'
 import { useProfessionalClient } from '../../services/professional'
 import { useCompleteFollowUp } from '../../services/followups'
+import { useAppointmentStatus } from '../../services/appointments'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function ProClientDetail() {
   const { id } = useParams<{ id: string }>()
   const { data, isLoading, isError } = useProfessionalClient(id ?? '')
   const complete = useCompleteFollowUp()
+  const appointmentStatus = useAppointmentStatus()
+  const queryClient = useQueryClient()
 
   const [notes, setNotes] = useState('')
   const [marking, setMarking] = useState<string | null>(null)
+  const [updatingAppointment, setUpdatingAppointment] = useState<string | null>(null)
 
   if (isLoading) return <Loading label="Loading client…" />
 
@@ -41,6 +46,19 @@ export default function ProClientDetail() {
       toast.error(err instanceof ApiError ? err.message : 'Could not complete this follow-up.')
     } finally {
       setMarking(null)
+    }
+  }
+
+  async function updateAppointment(id: string, status: 'confirmed' | 'completed' | 'cancelled') {
+    setUpdatingAppointment(id)
+    try {
+      await appointmentStatus.mutateAsync({ id, status })
+      if (client?.id) await queryClient.invalidateQueries({ queryKey: ['professional', 'client', client.id] })
+      toast.success(status === 'confirmed' ? 'Session confirmed.' : status === 'completed' ? 'Session marked complete.' : 'Session declined.')
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Could not update the session.')
+    } finally {
+      setUpdatingAppointment(null)
     }
   }
 
@@ -79,7 +97,7 @@ export default function ProClientDetail() {
               {appointments.map((a) => (
                 <Card key={a._id}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="inline-flex items-center gap-2 font-medium text-hub-text">
                         <CalendarDays className="h-4 w-4 text-hub-primary" />
                         {formatDate(a.date)} at {formatTime(a.date)}
@@ -88,6 +106,17 @@ export default function ProClientDetail() {
                     </div>
                     <p className="mt-1 text-sm text-hub-muted">{a.type} · {a.durationMin} min</p>
                     {a.notes ? <p className="mt-2 text-xs text-slate-400">{a.notes}</p> : null}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {['requested', 'rescheduled'].includes(a.status) ? (
+                        <>
+                          <Button size="sm" onClick={() => void updateAppointment(a._id, 'confirmed')} disabled={updatingAppointment === a._id}>Confirm</Button>
+                          <Button size="sm" variant="danger" onClick={() => void updateAppointment(a._id, 'cancelled')} disabled={updatingAppointment === a._id}>Decline</Button>
+                        </>
+                      ) : null}
+                      {a.status === 'confirmed' && new Date(a.date).getTime() <= Date.now() ? (
+                        <Button size="sm" variant="outline" onClick={() => void updateAppointment(a._id, 'completed')} disabled={updatingAppointment === a._id}>Mark complete</Button>
+                      ) : null}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

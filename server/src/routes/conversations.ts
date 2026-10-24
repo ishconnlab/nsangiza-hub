@@ -157,7 +157,9 @@ router.get(
   '/:id',
   asyncHandler(async (req: AuthedRequest, res) => {
     const conversation = await accessibleConversation(req.params.id, req.userId!)
-    const messages = await Message.find({ conversation: conversation._id }).sort({ createdAt: 1 }).lean()
+    const messages = await Message.find({ conversation: conversation._id })
+      .select('conversation sender senderRole body kind status createdAt updatedAt attachment.name attachment.mimeType attachment.size')
+      .sort({ createdAt: 1 }).lean()
     const confirmedCalls = await Appointment.find({
       user: conversation.user,
       professional: conversation.professional,
@@ -210,9 +212,30 @@ router.post(
   }),
 )
 
+router.get(
+  '/:id/messages/:messageId/attachment',
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const conversation = await accessibleConversation(req.params.id, req.userId!)
+    const message = await Message.findOne({ _id: req.params.messageId, conversation: conversation._id })
+      .select('attachment.name attachment.mimeType attachment.dataUrl attachment.size').lean()
+    if (!message?.attachment?.dataUrl) throw ApiError.notFound('Attachment not found.')
+    res.json(ok({ attachment: message.attachment }))
+  }),
+)
+
 const sendSchema = z.object({
   body: z.string().max(2000).optional(),
   kind: z.enum(['text', 'emoji', 'audio', 'attachment', 'system']).optional(),
+  attachment: z.object({
+    name: z.string().trim().min(1).max(160),
+    mimeType: z.enum([
+      'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword', 'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg',
+    ]),
+    dataUrl: z.string().max(7_000_000),
+    size: z.number().int().positive().max(5 * 1024 * 1024),
+  }).optional(),
 })
 
 router.post(
@@ -221,7 +244,19 @@ router.post(
     const conversation = await accessibleConversation(req.params.id, req.userId!)
     if (conversation.status === 'blocked') throw ApiError.forbidden('This conversation is no longer open.')
     const body = sendSchema.parse(req.body)
-    if (!body.body && !body.kind) throw ApiError.badRequest('Message cannot be empty.')
+    if (!body.body && !body.attachment && !body.kind) throw ApiError.badRequest('Message cannot be empty.')
+    if (['audio', 'attachment'].includes(body.kind ?? '') && !body.attachment) throw ApiError.badRequest('Add a file to this message and try again.')
+    if (body.attachment && !['audio', 'attachment'].includes(body.kind ?? '')) throw ApiError.badRequest('This file type is not valid for the selected message.')
+    if (body.attachment) {
+      const encoded = body.attachment.dataUrl.match(/^data:([^;,]+);base64,([A-Za-z0-9+/]+=*)$/)
+      if (!encoded || encoded[1] !== body.attachment.mimeType) throw ApiError.badRequest('This file could not be read. Choose a supported file and try again.')
+      const bytes = Buffer.from(encoded[2], 'base64')
+      if (bytes.byteLength !== body.attachment.size || bytes.byteLength > 5 * 1024 * 1024) {
+        throw ApiError.badRequest('Files must be 5 MB or smaller.')
+      }
+      if (body.kind === 'audio' && !body.attachment.mimeType.startsWith('audio/')) throw ApiError.badRequest('Voice messages must be audio files.')
+      if (body.kind === 'attachment' && body.attachment.mimeType.startsWith('audio/')) throw ApiError.badRequest('Choose an image or document for this attachment.')
+    }
 
     const user = await User.findById(req.userId).lean()
     const message = await Message.create({
@@ -230,6 +265,7 @@ router.post(
       senderRole: user?.role ?? 'USER',
       body: body.body ?? '',
       kind: body.kind ?? 'text',
+      attachment: body.attachment,
       status: 'sent',
     })
 
@@ -261,7 +297,15 @@ router.post(
         link: user?.role === 'USER' ? `/professional/messages/${conversation._id}` : `/app/messages/${conversation._id}`,
       })
     }
-    res.status(201).json(ok({ message }, 'Message sent.'))
+    const messageResponse = message.toObject()
+    const attachmentMetadata = messageResponse.attachment
+      ? {
+          name: messageResponse.attachment.name,
+          mimeType: messageResponse.attachment.mimeType,
+          size: messageResponse.attachment.size,
+        }
+      : undefined
+    res.status(201).json(ok({ message: { ...messageResponse, attachment: attachmentMetadata } }, 'Message sent.'))
   }),
 )
 

@@ -49,7 +49,7 @@ export function useCreateAppointment() {
 export function useUpdateAppointment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: { status?: AppointmentStatus; date?: string; notes?: string } }) =>
+    mutationFn: ({ id, body }: { id: string; body: { status?: AppointmentStatus; date?: string; type?: SessionType; notes?: string } }) =>
       patch<{ appointment: Appointment }>(`/appointments/${id}`, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: appointmentKeys.all })

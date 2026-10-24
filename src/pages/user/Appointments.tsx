@@ -10,6 +10,7 @@ import { StatusBadge } from '../../components/ui/status-badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { EmptyState, Loading, PageHeader } from '../../components/PageHeader'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog'
+import type { SessionType } from '../../types'
 import { formatDate, formatTime } from '../../lib/format'
 import { ApiError } from '../../lib/api'
 import { useI18n } from '../../i18n/LanguageProvider'
@@ -18,6 +19,9 @@ import { useOpenAppointmentSession } from '../../services/conversations'
 import type { Appointment } from '../../types'
 function isUpcomingStatus(status: string) {
   return ['requested', 'confirmed', 'rescheduled'].includes(status)
+}
+function toLocalDateTimeValue(value: Date) {
+  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
 }
 function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const { t } = useI18n()
@@ -29,12 +33,16 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const [cancelOpen, setCancelOpen] = useState(false)
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [newDateTime, setNewDateTime] = useState('')
+  const [rescheduleType, setRescheduleType] = useState<SessionType>(appointment.type)
   const [busy, setBusy] = useState<'cancel' | 'reschedule' | null>(null)
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000)
     return () => window.clearInterval(timer)
   }, [])
+  useEffect(() => {
+    if (rescheduleOpen) setRescheduleType(appointment.type)
+  }, [rescheduleOpen, appointment.type])
   const upcoming = isUpcomingStatus(appointment.status)
   const start = new Date(appointment.date)
   const end = appointment.endDate ? new Date(appointment.endDate) : new Date(start.getTime() + (appointment.durationMin || 45) * 60_000)
@@ -57,7 +65,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
     if (!newDateTime) return
     setBusy('reschedule')
     try {
-      await updateMutation.mutateAsync({ id: appointment._id, body: { date: new Date(newDateTime).toISOString() } })
+      await updateMutation.mutateAsync({ id: appointment._id, body: { date: new Date(newDateTime).toISOString(), type: rescheduleType } })
       setRescheduleOpen(false)
       setDetailOpen(false)
       toast.success(t('appt.rescheduled'))
@@ -206,10 +214,23 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
             <Input
               id={`reschedule-${appointment._id}`}
               type="datetime-local"
-              min={new Date(Date.now() + 30 * 60_000).toISOString().slice(0, 16)}
+              min={toLocalDateTimeValue(new Date(Date.now() + 30 * 60_000))}
               value={newDateTime}
               onChange={(e) => setNewDateTime(e.target.value)}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`reschedule-type-${appointment._id}`}>Session type</Label>
+            <select
+              id={`reschedule-type-${appointment._id}`}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
+              value={rescheduleType}
+              onChange={(e) => setRescheduleType(e.target.value as SessionType)}
+            >
+              {(appointment.availableSessionTypes ?? [appointment.type]).map((sessionType) => (
+                <option key={sessionType} value={sessionType}>{sessionType}</option>
+              ))}
+            </select>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRescheduleOpen(false)}>

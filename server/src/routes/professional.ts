@@ -256,7 +256,7 @@ router.get(
 
     // Least-privilege guard: only users with a real professional↔user
     // relationship (appointment or follow-up) may be viewed as clients.
-    const eligibleStatuses = ['requested', 'confirmed', 'rescheduled', 'completed']
+    const eligibleStatuses = ['requested', 'confirmed', 'rescheduled', 'completed', 'cancelled', 'no-show']
     const appointments = await Appointment.find({ professional: professional._id, user: req.params.id, status: { $in: eligibleStatuses } }).sort({ date: -1 }).lean()
     if (!appointments.length) throw ApiError.notFound('Client not found.')
 
@@ -268,10 +268,14 @@ router.get(
 
     // Least-privilege principle: only aggregate, non-clinical information by default.
     const summarized = appointments.map((a) => ({
+      _id: String(a._id),
       id: String(a._id),
       date: a.date,
+      endDate: a.endDate,
+      durationMin: a.durationMin,
       status: a.status,
       type: a.type,
+      notes: a.notes,
     }))
 
     res.json(

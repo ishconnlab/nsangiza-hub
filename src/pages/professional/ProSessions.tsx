@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
 import { Card, CardContent } from '../../components/ui/card'
@@ -67,7 +67,7 @@ export default function ProSessions() {
                   <CardContent className="flex flex-wrap items-start justify-between gap-4 p-5">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-hub-text">{clientName(String(a.user))}</p>
+                        <Link to={`/professional/clients/${String(a.user)}`} className="font-semibold text-hub-primary hover:underline">{clientName(String(a.user))} · View client details</Link>
                         <Badge variant={a.status === 'requested' ? 'warning' : a.status === 'confirmed' ? 'success' : 'info'}>{a.status}</Badge>
                       </div>
                       <p className="mt-1 text-sm text-hub-muted">
@@ -111,7 +111,7 @@ export default function ProSessions() {
                   <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-hub-text">{clientName(String(a.user))}</p>
+                        <Link to={`/professional/clients/${String(a.user)}`} className="font-semibold text-hub-primary hover:underline">{clientName(String(a.user))} · View client details</Link>
                         <Badge variant={a.status === 'completed' ? 'secondary' : a.status === 'confirmed' ? 'success' : 'danger'}>{a.status}</Badge>
                       </div>
                       <p className="mt-1 text-sm text-hub-muted">{formatDate(a.date)} at {formatTime(a.date)} · {a.type}</p>

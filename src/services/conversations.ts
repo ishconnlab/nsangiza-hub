@@ -49,8 +49,12 @@ export function useOpenAppointmentSession() {
 export function useSendMessage() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ conversationId, body }: { conversationId: string; body: string }) =>
-      post<{ message: Message }>(`/conversations/${conversationId}/messages`, { body }),
+    mutationFn: ({ conversationId, body, kind, attachment }: {
+      conversationId: string
+      body?: string
+      kind?: Message['kind']
+      attachment?: NonNullable<Message['attachment']>
+    }) => post<{ message: Message }>(`/conversations/${conversationId}/messages`, { body, kind, attachment }),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: conversationKeys.messages(variables.conversationId) })
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
